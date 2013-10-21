@@ -4,6 +4,7 @@ import piratechem as pc
 import mmap
 import itertools
 import numpy as np
+from numpy import nan
 import re
 from piratechem.utils import *
 
@@ -16,8 +17,11 @@ class Atom(pc.atom.Atom):
         pc.atom.Atom.__init__(self, name, r)
 
         # storage for hyperfine values
-        self.atensor = []
-        self.aiso = 0.0
+        self.amatrix = np.array([[nan, nan, nan],
+                                 [nan, nan, nan],
+                                 [nan, nan, nan]])
+        self.atensor = np.array([nan, nan, nan])
+        self.aiso = nan
 
     def __str__(self):
         s = "Atom(%s, [%6.3f, %6.3f, %6.3f])"
@@ -59,8 +63,8 @@ class ORCAParser:
         self.keywords = []
         self.blocks = []
 
-        self.gtensor = []
-        self.giso = 0.0
+        self.gtensor = np.array([nan, nan, nan])
+        self.giso = nan
 
     def __str__(self):
         # BUGS BUGS BUGS FIX FIX FIX
@@ -301,7 +305,7 @@ class ORCAOutputParser(ORCAParser):
                 break
         if (idx == 0): return self.gtensor, self.giso
 
-        # Here is a sample of what we would like to parse:
+        # Here is a sample of what we would like to parse (printlevel = 5):
         # -------------------
         # ELECTRONIC G-MATRIX
         # -------------------
@@ -327,6 +331,28 @@ class ORCAOutputParser(ORCAParser):
         # [17]  Y          -0.2090765    0.8913857    0.4021425
         # [18]  Z           0.8450521    0.3716348   -0.3844145
 
+        # printlevel = default:
+        # -------------------
+        # ELECTRONIC G-MATRIX
+        # -------------------
+
+        # The g-matrix:
+        # [00] 2.1559400    0.0131394    0.0398422
+        # [01] 0.0073318    2.2438835    0.0867736
+        # [02] 0.0416022    0.0894444    2.0903767
+
+        # gel          2.0023193    2.0023193    2.0023193
+        # [05] gRMC         2.0013017    2.0013017    2.0013017
+        # [06] gDSO(tot)    0.0003267    0.0004160    0.0005318
+        # [07] gPSO(tot)    0.0390665    0.1584851    0.2874688
+        # ----------   ----------   ----------
+        # [09] g(tot)       2.0406959    2.1602051    2.2893042 iso=  2.1634017
+        # [10] Delta-g      0.0383766    0.1578858    0.2869849 iso=  0.1610824
+        # Orientation:
+        # [12] X          -0.2796999    0.9393265    0.1985791
+        # [13] Y          -0.3699085   -0.2963004    0.8805531
+        # [14] Z           0.8859659    0.1728345    0.4303401
+
         self.gel = 2.0023193
         # first, we parse the orientation-dependent g-matrix
         self.gmatrix = np.array([self.orcafile[idx+0].split(),
@@ -334,27 +360,38 @@ class ORCAOutputParser(ORCAParser):
                                  self.orcafile[idx+2].split()], dtype=np.float64)
 
         # then, we parse the decomposition of delta_g into its individual contributions
+        # we need to handle both the standard output level and %eprnmr printlevel = 5
         self.grmc = np.asanyarray(self.orcafile[idx+5].split()[1:], dtype=np.float64)
-        self.gdso1el = np.asanyarray(self.orcafile[idx+6].split()[1:], dtype=np.float64)
-        self.gdso2el = np.asanyarray(self.orcafile[idx+7].split()[1:], dtype=np.float64)
+
         if (self.orcafile[idx+8].split()[1:] == ['----------', '----------']):
-            print "derp, we fail when %eprnmr printlevel != 5"
-        self.gdsotot = np.asanyarray(self.orcafile[idx+8].split()[1:], dtype=np.float64)
-        self.gpso1el = np.asanyarray(self.orcafile[idx+9].split()[1:], dtype=np.float64)
-        self.gpso2el = np.asanyarray(self.orcafile[idx+10].split()[1:], dtype=np.float64)
-        self.gpsotot = np.asanyarray(self.orcafile[idx+11].split()[1:], dtype=np.float64)
+            self.gdsotot = np.asanyarray(self.orcafile[idx+6].split()[1:], dtype=np.float64)
+            self.gpsotot = np.asanyarray(self.orcafile[idx+7].split()[1:], dtype=np.float64)
+            gtottmp = self.orcafile[idx+9].split()[1:]
+            delgtmp = self.orcafile[idx+10].split()[1:]
+            self.giso, self.dgiso = float(gtottmp[4]), float(delgtmp[4])
+            self.gtensor = np.array([gtottmp[0], gtottmp[1], gtottmp[2]], dtype=np.float64)
+            self.delgtensor = np.array([delgtmp[0], delgtmp[1], delgtmp[2]], dtype=np.float64)
+            self.gori = np.array([self.orcafile[idx+12].split()[1:],
+                                  self.orcafile[idx+13].split()[1:],
+                                  self.orcafile[idx+14].split()[1:]], dtype=np.float64)
 
-        # then, we take the final tensors plus their isotropic values
-        gtottmp = self.orcafile[idx+13].split()[1:]
-        delgtmp = self.orcafile[idx+14].split()[1:]
-        self.giso, self.dgiso = float(gtottmp[4]), float(delgtmp[4])
-        self.gtensor = np.array([gtottmp[0], gtottmp[1], gtottmp[2]], dtype=np.float64)
-        self.delgtensor = np.array([delgtmp[0], delgtmp[1], delgtmp[2]], dtype=np.float64)
-
-        # finally, we take the orientation
-        self.gori = np.array([self.orcafile[idx+16].split()[1:],
-                              self.orcafile[idx+17].split()[1:],
-                              self.orcafile[idx+18].split()[1:]], dtype=np.float64)
+        else:
+            self.gdso1el = np.asanyarray(self.orcafile[idx+6].split()[1:], dtype=np.float64)
+            self.gdso2el = np.asanyarray(self.orcafile[idx+7].split()[1:], dtype=np.float64)
+            self.gdsotot = np.asanyarray(self.orcafile[idx+8].split()[1:], dtype=np.float64)
+            self.gpso1el = np.asanyarray(self.orcafile[idx+9].split()[1:], dtype=np.float64)
+            self.gpso2el = np.asanyarray(self.orcafile[idx+10].split()[1:], dtype=np.float64)
+            self.gpsotot = np.asanyarray(self.orcafile[idx+11].split()[1:], dtype=np.float64)
+            # then, we take the final tensors plus their isotropic values
+            gtottmp = self.orcafile[idx+13].split()[1:]
+            delgtmp = self.orcafile[idx+14].split()[1:]
+            self.giso, self.dgiso = float(gtottmp[4]), float(delgtmp[4])
+            self.gtensor = np.array([gtottmp[0], gtottmp[1], gtottmp[2]], dtype=np.float64)
+            self.delgtensor = np.array([delgtmp[0], delgtmp[1], delgtmp[2]], dtype=np.float64)
+            # finally, we take the orientation
+            self.gori = np.array([self.orcafile[idx+16].split()[1:],
+                                  self.orcafile[idx+17].split()[1:],
+                                  self.orcafile[idx+18].split()[1:]], dtype=np.float64)
 
         return self.gtensor, self.giso
 
@@ -364,7 +401,7 @@ class ORCAOutputParser(ORCAParser):
         """
 
         # if the atom doesn't have coordinates, this isn't going to work
-        if not self._has_coords: return ([], 0.0)
+        if not self._has_coords: return (np.array([nan, nan, nan]), nan)
 
         # first, find the atom
         idx_nucleus = 0
@@ -386,38 +423,75 @@ class ORCAOutputParser(ORCAParser):
                 break
         if (idx == 0): return atom.atensor, atom.aiso
 
-        # Raw HFC matrix (all values in MHz):
-        # [00]             1.4411      -0.0380       0.0783
-        # [01]            -0.0431       1.0183      -0.0205
-        # [02]             0.0840      -0.0263       1.1855
+        ###############
+        ### ORCA 3.0.0
+        if (len(self.orcafile[idx].split()) == 1):
 
-        # [04] A(FC)       1.2026       1.2026       1.2026
-        # [05] A(SD)      -0.1901      -0.0700       0.2602
-        # [06] A(SO)       0.0005       0.0302       0.0065 A(PC) =     0.0124
-        #         ----------   ----------   ----------
-        # [08] A(Tot)      1.0130       1.1627       1.4693 A(iso)=     1.2150
-        # Orientation:
-        # [10]  X       0.0729906   -0.2793657    0.9574065
-        # [11]  Y       0.9936103   -0.0624924   -0.0939856
-        # [12]  Z       0.0860870    0.9581490    0.2730193
+            # Raw HFC matrix (all values in MHz):
+            # ------------------------------
+            # [01] 2.6153               0.1906               0.1416
+            # [02] 0.1871               2.2165               0.2023
+            # [03] 0.1370               0.1969               2.3443
 
-        # first, we parse the orientation-dependent A-matrix
-        atom.amatrix = np.array([self.orcafile[idx+0].split(),
-                                 self.orcafile[idx+1].split(),
-                                 self.orcafile[idx+2].split()], dtype=np.float64)
+            # [05] A(FC)           2.3761               2.3761               2.3761
+            # [06] A(SD)          -0.3152              -0.0925               0.4078
+            # [07] A(ORB+DIA)     -0.0013               0.0436               0.0057    A(PC) =   0.0160
+            # [08] A(ORB)         -0.0014               0.0435               0.0058    A(PC) =   0.0160
+            # [09] A(DIA)          0.0001               0.0000              -0.0000    A(PC) =   0.0000
+            # ----------           ----------           ----------
+            # [11] A(Tot)          2.0595               2.3271               2.7895    A(iso)=    2.3921
+            # Orientation:
+            # [13] X           0.1564822            0.5846922            0.7960203
+            # [14] Y          -0.8421894           -0.3420471            0.4167983
+            # [15] Z           0.5159752           -0.7356214            0.4388972
 
-        # then, we parse the decomposition of A into its individual contributions
-        atom.afc = np.asanyarray(self.orcafile[idx+4].split()[1:], dtype=np.float64)
-        atom.asd = np.asanyarray(self.orcafile[idx+5].split()[1:], dtype=np.float64)
-        asotmp = self.orcafile[idx+6].split()[1:]
-        atom.aso, atom.apc = np.array([asotmp[0], asotmp[1], asotmp[2]], dtype=np.float64), float(asotmp[-1])
-        atottmp = self.orcafile[idx+8].split()[1:]
-        atom.atensor, atom.aiso = np.array([atottmp[0], atottmp[1], atottmp[2]], dtype=np.float64), float(atottmp[-1])
+            atom.amatrix = np.array([self.orcafile[idx+1].split(),
+                                     self.orcafile[idx+2].split(),
+                                     self.orcafile[idx+3].split()], dtype=np.float64)
+            atom.afc = np.asanyarray(self.orcafile[idx+5].split()[1:], dtype=np.float64)
+            atom.asd = np.asanyarray(self.orcafile[idx+6].split()[1:], dtype=np.float64)
+            atottmp = self.orcafile[idx+11].split()[1:]
+            atom.atensor, atom.aiso = np.array([atottmp[0], atottmp[1], atottmp[2]], dtype=np.float64), float(atottmp[-1])
+            atom.aori = np.array([self.orcafile[idx+13].split()[1:],
+                                  self.orcafile[idx+14].split()[1:],
+                                  self.orcafile[idx+15].split()[1:]], dtype=np.float64)
 
-        # finally, we take the orientation
-        atom.aori = np.array([self.orcafile[idx+10].split()[1:],
-                              self.orcafile[idx+11].split()[1:],
-                              self.orcafile[idx+12].split()[1:]], dtype=np.float64)
+
+        ##############
+        ### ORCA 2.9.1
+        else:
+            # Raw HFC matrix (all values in MHz):
+            # [00]             1.4411      -0.0380       0.0783
+            # [01]            -0.0431       1.0183      -0.0205
+            # [02]             0.0840      -0.0263       1.1855
+
+            # [04] A(FC)       1.2026       1.2026       1.2026
+            # [05] A(SD)      -0.1901      -0.0700       0.2602
+            # [06] A(SO)       0.0005       0.0302       0.0065 A(PC) =     0.0124
+            #         ----------   ----------   ----------
+            # [08] A(Tot)      1.0130       1.1627       1.4693 A(iso)=     1.2150
+            # Orientation:
+            # [10]  X       0.0729906   -0.2793657    0.9574065
+            # [11]  Y       0.9936103   -0.0624924   -0.0939856
+            # [12]  Z       0.0860870    0.9581490    0.2730193
+
+            # first, we parse the orientation-dependent A-matrix
+            atom.amatrix = np.array([self.orcafile[idx+0].split(),
+                                     self.orcafile[idx+1].split(),
+                                     self.orcafile[idx+2].split()], dtype=np.float64)
+
+            # then, we parse the decomposition of A into its individual contributions
+            atom.afc = np.asanyarray(self.orcafile[idx+4].split()[1:], dtype=np.float64)
+            atom.asd = np.asanyarray(self.orcafile[idx+5].split()[1:], dtype=np.float64)
+            asotmp = self.orcafile[idx+6].split()[1:]
+            atom.aso, atom.apc = np.array([asotmp[0], asotmp[1], asotmp[2]], dtype=np.float64), float(asotmp[-1])
+            atottmp = self.orcafile[idx+8].split()[1:]
+            atom.atensor, atom.aiso = np.array([atottmp[0], atottmp[1], atottmp[2]], dtype=np.float64), float(atottmp[-1])
+
+            # finally, we take the orientation
+            atom.aori = np.array([self.orcafile[idx+10].split()[1:],
+                                  self.orcafile[idx+11].split()[1:],
+                                  self.orcafile[idx+12].split()[1:]], dtype=np.float64)
 
         return atom.atensor, atom.aiso
 
@@ -435,6 +509,12 @@ class ORCAOutputParser(ORCAParser):
         """
         return self._get_nuclear_atom(atom)
 
+    def extract_multiple_jobs(self):
+        """
+
+        """
+        pass
+
     def nitrogen_hyperfine_1st(self):
         """
         Return the hyperfine tensor of the closest nitrogen to the copper.
@@ -447,7 +527,7 @@ class ORCAOutputParser(ORCAParser):
         # (4) Retrieve the stuff from this new id we've found
 
         # this lets us fail silently on bad output files
-        if not self._has_coords: return ([], 0)
+        if not self._has_coords: return (np.array([nan, nan, nan]), nan)
         ids_n = self.find_element("N")
         try:
             id_cu = self.find_element("Cu")[0]
@@ -456,14 +536,14 @@ class ORCAOutputParser(ORCAParser):
         distances = [self.pair_distance(id_cu, n) for n in ids_n]
         idx = ids_n[distances.index(one_smallest(distances))]
         hyperfine = self.get_hyperfine(self.molecule[idx])
-        return hyperfine[0], idx
+        return hyperfine[0], idx, self.molecule[idx]
 
     def nitrogen_hyperfine_2nd(self):
         """
         Return the hyperfine tensor of the second-closest nitrogen to the copper.
         """
 
-        if not self._has_coords: return ([], 0)
+        if not self._has_coords: return (np.array([nan, nan, nan]), nan)
         ids_n = self.find_element("N")
         try:
             id_cu = self.find_element("Cu")[0]
@@ -472,7 +552,7 @@ class ORCAOutputParser(ORCAParser):
         distances = [self.pair_distance(id_cu, n) for n in ids_n]
         idx = ids_n[distances.index(two_smallest(distances)[1])]
         hyperfine = self.get_hyperfine(self.molecule[idx])
-        return hyperfine[0], idx
+        return hyperfine[0], idx, self.molecule[idx]
 
     def nitrogen_hyperfine(self):
         """
@@ -488,16 +568,5 @@ if __name__ == "__main__":
 
     namelist = args.orcaname
 
-    s = "{:>34s} {:>28s} {:>3s} {:>25s} {:>3s} {:<s}"
-    print s.format("g-tensor", "nitrogen_close", "id", "nitrogen_far", "id", "name")
 
-    for name in namelist:
-
-        orcafile = ORCAOutputParser(name)
-        gtensor, giso = orcafile.get_gtensor()
-        atensor_close, id_close = orcafile.nitrogen_hyperfine_1st()
-        atensor_far, id_far = orcafile.nitrogen_hyperfine_2nd()
-
-        s = "{:>28s} {:>28s} {:>3d} {:>25s} {:>3d} {:<s}"
-        print s.format(gtensor, atensor_close, id_close, atensor_far, id_far, name)
 
