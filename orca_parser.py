@@ -1,47 +1,13 @@
 #!/usr/bin/env python2
 
-import piratechem as pc
-import mmap
-import itertools
 import numpy as np
 from numpy import nan
-import re
-from piratechem.utils import *
+import mmap
 
-class Atom(pc.atom.Atom):
-    """
-    Allow each atom to contain more specific quantum chemical properties
-    than piratechem can currently handle.
-    """
-    def __init__(self, name, r):
-        pc.atom.Atom.__init__(self, name, r)
+import piratechem as pc
+from piratechem.utils import one_smallest, two_smallest
 
-        # storage for hyperfine values
-        self.amatrix = np.array([[nan, nan, nan],
-                                 [nan, nan, nan],
-                                 [nan, nan, nan]])
-        self.atensor = np.array([nan, nan, nan])
-        self.aiso = nan
-
-    def __str__(self):
-        s = "Atom(%s, [%6.3f, %6.3f, %6.3f])"
-        return s % (self.name, self.posx, self.posy, self.posz)
-
-class GTensor():
-    """
-    Hold all of the fields that may be present in the output file
-    from a g-tensor calculation.
-    """
-    def __init__(self):
-        pass
-
-class ATensor():
-    """
-    Hold all of the fields that may be present in the output file
-    from nuclear property calculations.
-    """
-    def __init__(self):
-        pass
+from Atom import Atom
 
 class ORCAParser:
     """
@@ -554,19 +520,11 @@ class ORCAOutputParser(ORCAParser):
         hyperfine = self.get_hyperfine(self.molecule[idx])
         return hyperfine[0], idx, self.molecule[idx]
 
-    def nitrogen_hyperfine(self):
-        """
-        """
-        pass
+# if __name__ == "__main__":
+#     from orcaparse import *
+#     import argparse
 
-if __name__ == "__main__":
-    import argparse
-
-    parser = argparse.ArgumentParser(description="")
-    parser.add_argument(dest="orcaname", metavar="<orca filename>", nargs="+", type=str, default=None, help="")
-    args = parser.parse_args()
-
-    namelist = args.orcaname
-
-
-
+#     parser = argparse.ArgumentParser(description="A toolbox for creating and parsing ORCA input and output files from the command line or Python scripts.")
+#     parser.add_argument(dest="namelist", metavar="<orca filename>", nargs="+", type=str, default=None, help="ORCA input or output files.")
+#     args = parser.parse_args()
+#     namelist = args.namelist
