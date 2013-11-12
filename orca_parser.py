@@ -3,6 +3,7 @@
 import numpy as np
 from numpy import nan
 import mmap
+import re
 
 import piratechem as pc
 from piratechem.utils import one_smallest, two_smallest
@@ -16,7 +17,7 @@ class ORCAParser:
     :param file_name: the ORCA input file name
     :type file_name: str
 
-    >>> molecule = OrcaParser('caffeine.inp')
+    >>> molecule = ORCAParser('caffeine.inp')
     >>> print molecule.charge
     >>> molecule.scf['guess'] = 'pmodel'
     >>> molecule.inputblock += 'blyp def2-svp def2-svp/c'
