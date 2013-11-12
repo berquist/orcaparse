@@ -4,14 +4,32 @@ class EPRFile:
     """
     """
     def __init__(self, charge=0, xyzfile=""):
-        pass
+        self.contents = self.default(charge, xyzfile)
 
     def default(self, charge, xyzfile):
-            """
-            Generate the ORCA input file, here for a geometry optimization,
-            followed by an EPR calculation (g-tensor and N/Cu hyperfine)
-            """
-            return """! uks def2-tzvpp def2-tzvpp/j ri rijcosx somf(1x) tightscf tightopt grid5
+        pass
+
+class OptFile:
+    """
+    """
+    def __init__(self, charge=0, xyzfile=""):
+        self.contents = self.default(charge, xyzfile)
+
+    def default(self, charge, xyzfile):
+        pass
+
+class EPROptFile:
+    """
+    """
+    def __init__(self, charge=0, xyzfile=""):
+        self.contents = self.default(charge, xyzfile)
+
+    def default(self, charge, xyzfile):
+        """
+        Generate the ORCA input file, here for a geometry optimization,
+        followed by an EPR calculation (g-tensor and N/Cu hyperfine)
+        """
+        return """! uks def2-tzvpp def2-tzvpp/j ri rijcosx somf(1x) tightscf tightopt grid5
 
 * xyzfile {0} 2 {1}.xyz *
 
@@ -45,32 +63,27 @@ class EPRFile:
 
 """.format(charge, xyzfile)
 
-class OptFile:
-    """
-    """
-    def __init__(self):
-        pass
-
-class EPROptFile:
-    """
-    """
-    def __init__(self):
-        pass
-
 class PBSFile:
     """
     """
-    def __init__(self):
-        pass
+    def __init__(self, xyzfile=""):
+        self.contents = self.default(xyzfile)
 
     def default(self, xyzfile):
         """
+        Returns the default PBS/Torque job submission script for running ORCA jobs.
         """
+        if xyzfile == "":
+            xyzfilecp = ""
+            jobname = "default"
+        else:
+            xyzfilecp = "cp $PBS_O_WORKDIR/{0}.xyz $LOCAL".format(xyzfile)
+            jobname = xyzfile
         return """#!/bin/bash
 
 #PBS -N {0}
 #PBS -q ishared_large
-#PBS -l nodes=1:ppn=16
+#PBS -l nodes=1:ppn=8
 #PBS -l walltime=144:00:00
 #PBS -j oe
 #PBS -l qos=low
@@ -81,7 +94,7 @@ module load openmpi/1.6.3-intel13
 module load orca/3.0.0
 
 cp $PBS_O_WORKDIR/{0}.inp $LOCAL
-cp $PBS_O_WORKDIR/{0}.xyz $LOCAL
+{1}
 cd $LOCAL
 
 run_on_exit() {{
@@ -92,11 +105,10 @@ run_on_exit() {{
 trap run_on_exit EXIT
 
 `which orca` {0}.inp >& $PBS_O_WORKDIR/{0}.out
-""".format(xyzfile)
+""".format(jobname, xyzfilecp)
 
 if __name__ == "__main__":
     import argparse
-    import subprocess as sp
     import os
 
     parser = argparse.ArgumentParser(description="Script to output default ORCA input files and PBS/Torque job files to run the corresponding calculations.")
@@ -111,13 +123,15 @@ if __name__ == "__main__":
         stub = os.path.splitext(xname)[0]
         orcahandle = stub + ".inp"
         jobhandle  = stub + ".pbs"
+
         orcafile = open(orcahandle, "w")
         jobfile  = open(jobhandle, "w")
-        
-        print >> orcafile, EPRFile.default(charge, stub)
-        print >> jobfile,  PBSFile.default(stub)
-        
+
+        orcainstance = EPROptFile(charge, stub)
+        jobinstance  = PBSFile(stub)
+
+        print >> orcafile, orcainstance.default(charge, stub)
+        print >> jobfile,  jobinstance.default(stub)
+
         orcafile.close()
         jobfile.close()
-
-
