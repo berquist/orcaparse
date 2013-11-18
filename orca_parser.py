@@ -7,6 +7,7 @@ import re
 
 import piratechem as pc
 from piratechem.utils import one_smallest, two_smallest
+from piratechem.utils import only_numerics
 
 from Atom import Atom
 
@@ -128,6 +129,16 @@ class ORCAParser:
         """
         pass
 
+    def get_string_index(self, string_to_search):
+        """
+        Returns the index for the line containing the given string.
+        (case-sensitive)
+        """
+        for idx, line in enumerate(self.orcafile):
+            if (line.find(string_to_search) > -1):
+                return idx
+        return -1
+
 class ORCAInputParser(ORCAParser):
     """
     A parser for ORCA input files.
@@ -144,6 +155,7 @@ class ORCAOutputParser(ORCAParser):
         self.load()
         self._get_coords()
         self._calc_interatomic_distance()
+        self._get_euler()
 
     def get_input_file(self):
         """
@@ -462,13 +474,56 @@ class ORCAOutputParser(ORCAParser):
 
         return atom.atensor, atom.aiso
 
+    def _get_euler(self):
+        """
+        Extract all of the Euler rotation angles from the output file.
+        """
+        searchstr = "Euler rotation of hyperfine tensor to g-tensor"
+        idx = self.get_string_index(searchstr)
+        if (idx == -1):
+            pass
+        idx += 7
+
+        endline = "-------------------------------------------------------------------"
+        for i, line in enumerate(self.orcafile[idx:]):
+            tmpline = line.split()
+            if (tmpline == []) or (tmpline[0] == endline):
+                break
+            idx_nucleus = int(only_numerics(tmpline[0]))
+            tmpline[:] = [float(i) for i in tmpline[1:]]
+            self.molecule[idx_nucleus].euler.hyperfine.alpha = tmpline[0]
+            self.molecule[idx_nucleus].euler.hyperfine.beta = tmpline[1]
+            self.molecule[idx_nucleus].euler.hyperfine.gamma = tmpline[2]
+            self.molecule[idx_nucleus].euler.hyperfine.ax = tmpline[3]
+            self.molecule[idx_nucleus].euler.hyperfine.ay = tmpline[4]
+            self.molecule[idx_nucleus].euler.hyperfine.az = tmpline[5]
+
+        searchstr = "Euler rotation of Electric Field Gradient (EFG) tensor to g-tensor"
+        idx = self.get_string_index(searchstr)
+        if (idx == -1):
+            pass
+        idx += 7
+
+        for i, line in enumerate(self.orcafile[idx:]):
+            tmpline = line.split()
+            if (tmpline == []) or (tmpline[0] == endline):
+                break
+            idx_nucleus = int(only_numerics(tmpline[0]))
+            tmpline[:] = [float(i) for i in tmpline[1:]]
+            self.molecule[idx_nucleus].euler.efg.alpha = tmpline[0]
+            self.molecule[idx_nucleus].euler.efg.beta = tmpline[1]
+            self.molecule[idx_nucleus].euler.efg.gamma = tmpline[2]
+            self.molecule[idx_nucleus].euler.efg.efgx = tmpline[3]
+            self.molecule[idx_nucleus].euler.efg.efgy = tmpline[4]
+            self.molecule[idx_nucleus].euler.efg.efgz = tmpline[5]
+
     def _get_nuclear(self):
         """
         Get all of the fields that may be present in the output file
         from nuclear property calculations.
         """
         for atom in self.molecule:
-            self.get_nuclear_atom(atom)
+            self._get_nuclear_atom(atom)
 
     def get_hyperfine(self, atom):
         """

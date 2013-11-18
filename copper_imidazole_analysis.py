@@ -45,13 +45,23 @@ def hyperfine_zz(orcafile, idx_nucleus):
     orcafile.get_hyperfine(orcafile.molecule[idx_nucleus])
     return orcafile.molecule[idx_nucleus].amatrix[2,2]
 
+def euler(orcafile, idx_nucleus):
+    """Return the alpha, beta, gamma angles between the given hyperfine
+    tensor and the g-tensor."""
+    if np.isnan(idx_nucleus): return np.array([nan, nan, nan])
+    return orcafile.molecule[idx_nucleus].euler.hyperfine.return_angles()
+
+def nqcc(orcafile, idx_nucleus):
+    """pass"""
+    pass
+
 def formatted_output_copper_imidazole(namelist):
     """
     Given pathnames of output files, pretty print the electronic g-tensor
     and the copper/far nitrogen hyperfine tensors to STDOUT.
     """
-    s = "{:>34s} {:>28s} {:>3s} {:>25s} {:>3s} {:<s}"
-    print s.format("g-tensor", "copper", "id", "nitrogen_far", "id", "name")
+    s = "{:>34s} {:>31s} {:>20s} {:>3s} {:>28s} {:>20s} {:>3s} {:<s}"
+    print s.format("g-tensor", "a_copper", "euler_copper", "id", "a_nitrogen_far", "euler_nitrogen", "id", "name")
 
     for name in namelist:
 
@@ -59,10 +69,11 @@ def formatted_output_copper_imidazole(namelist):
         gtensor, giso = orcafile.get_gtensor()
         id_cu, id_far = copper_id(orcafile), nitrogen_far_id(orcafile)
         atensor_cu, atensor_far = hyperfine(orcafile, id_cu), hyperfine(orcafile, id_far)
+        euler_cu, euler_far = euler(orcafile, id_cu), euler(orcafile, id_far)
 
         a = abs(atensor_cu[-1])
-        s = "{:>34s} {:>28s} {:>3d} {:>25s} {:>3d} {:<s}"
-        print s.format(gtensor, atensor_cu, id_cu, atensor_far, id_far, name)
+        s = "{:>34s} {:>28s} {:>20s} {:>3d} {:>25s} {:>20s} {:>3d} {:<s}"
+        print s.format(gtensor, atensor_cu, euler_cu, id_cu, atensor_far, euler_far, id_far, "derp")
 
 if __name__ == "__main__":
     import argparse

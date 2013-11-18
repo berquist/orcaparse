@@ -12,7 +12,12 @@ import input_file_generators
 # from input_file_generators import PBSFile
 
 # from Atom import Atom
-# from ATensor import ATensor
-# from GTensor import GTensor
+# from Atom import Hyperfine
+# from Atom import Euler
+# from Atom.Euler import Hyperfine
+# from Atom.Euler import EFG
+
+# from Molecule import Molecule
+# from Molecule import GTensor
 
 import copper_imidazole_analysis
