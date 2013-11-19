@@ -162,9 +162,9 @@ class ORCAOutputParser(ORCAParser):
     def __init__(self, file_name):
         ORCAParser.__init__(self, file_name)
         self.load()
-        self._get_coords()
+        self._extract_coords()
         self._calc_interatomic_distance()
-        self._get_euler()
+        self._extract_molecule_euler()
 
     def get_input_file(self):
         """
@@ -244,9 +244,9 @@ class ORCAOutputParser(ORCAParser):
     def check_method_type(self):
         pass
 
-    def _get_coords(self):
+    def _extract_coords(self):
         """
-        Retrieve the molecular coordinates, in angstroms.
+        Extract the molecular coordinates, in angstroms.
         The block looks something like this:
 
         ---------------------------------
@@ -472,7 +472,7 @@ class ORCAOutputParser(ORCAParser):
 
         return atom.hyperfine.atensor, atom.hyperfine.aiso
 
-    def _get_euler(self):
+    def _extract_molecule_euler(self):
         """
         Extract all of the Euler rotation angles from the output file.
         """
