@@ -117,6 +117,7 @@ class EFG:
     def _calc_nqi_tensor(self):
         """
         """
-        self.px = k * (-(1-self.eta))
-        self.py = k * (-(1+self.eta))
-        self.pz = k * 2
+        self.px = self.k * (-(1-self.eta))
+        self.py = self.k * (-(1+self.eta))
+        self.pz = self.k * 2
+        self.p = np.array([self.px, self.py, self.pz])

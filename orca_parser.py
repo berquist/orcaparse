@@ -395,11 +395,13 @@ class ORCAOutputParser(ORCAParser):
         """
         return atom.hyperfine.atensor, atom.hyperfine.aiso
 
-    def return_atom_nqcc(self, atom):
+    def return_atom_nqi(self, atom):
         """
-        Return the nuclear quadrupolar coupling constant for the given atom.
+        Return the nuclear quadrupolar interaction (NQI) tensor,
+        the NQ coupling constant, and the asymmetry parameter eta
+        for the given atom.
         """
-        return atom.nqcc
+        return atom.efg.p, atom.efg.nqcc, atom.efg.eta
 
     def _extract_molecule_nuclear(self):
         """
@@ -497,7 +499,7 @@ class ORCAOutputParser(ORCAParser):
         idx_efg = self.get_string_index(searchstr, idx_hyp)
         # the arrays start at idx + 1
         if (idx_efg == -1): return
-        idx_efg += (idx_hyp + 1)
+        idx_efg += idx_hyp
 
         # Raw EFG matrix (all values in a.u.**-3):
         # [01]           -0.0099       0.2487       0.1679
@@ -519,6 +521,7 @@ class ORCAOutputParser(ORCAParser):
         # [17] e**2qQ/(4I*(2I-1))=    -0.448 MHz
         # [18] eta               =     0.341
         #  NOTE: the diagonal representation of the SH term I*Q*I = e**2qQ/(4I(2I-1))*[-(1-eta),-(1+eta),2]
+
         atom.efg.vmatrix = np.array([self.orcafile[idx_efg+1].split(),
                                      self.orcafile[idx_efg+2].split(),
                                      self.orcafile[idx_efg+3].split()], dtype=np.float64)
@@ -527,9 +530,9 @@ class ORCAOutputParser(ORCAParser):
         atom.efg.vnuc = np.asanyarray(self.orcafile[idx_efg+6].split()[1:], dtype=np.float64)
         atom.efg.vtot = np.asanyarray(self.orcafile[idx_efg+8].split()[1:], dtype=np.float64)
 
-        atom.efg.vori = np.array([self.orcafile[idx_efg+10].split(),
-                                  self.orcafile[idx_efg+11].split(),
-                                  self.orcafile[idx_efg+12].split()], dtype=np.float64)
+        atom.efg.vori = np.array([self.orcafile[idx_efg+10].split()[1:],
+                                  self.orcafile[idx_efg+11].split()[1:],
+                                  self.orcafile[idx_efg+12].split()[1:]], dtype=np.float64)
 
         atom.efg.nqcc = float(self.orcafile[idx_efg+16].split()[-2])
         atom.efg.k = float(self.orcafile[idx_efg+17].split()[-2])
