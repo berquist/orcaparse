@@ -417,19 +417,19 @@ class ORCAOutputParser(ORCAParser):
         # first, find the atom
         searchstr = "Nucleus\s+{}{}".format(atom.index, atom.name)
         idx_nucleus = self.get_regex_index(searchstr)
-        if (idx_nucleus == -1): return 
+        if (idx_nucleus == -1): return
 
         # gather the hyperfine information
         searchstr = "Raw HFC matrix (all values in MHz):"
-        idx = self.get_string_index(searchstr, idx_nucleus)
+        idx_hyp = self.get_string_index(searchstr, idx_nucleus)
         # start searching from where we found the atom
         # the arrays start at idx_nucleus + idx + 1
-        if (idx == -1): return
-        idx += (idx_nucleus + 1)
+        if (idx_hyp == -1): return
+        idx_hyp += (idx_nucleus + 1)
 
         ###############
         ### ORCA 3.0.0
-        if (len(self.orcafile[idx].split()) == 1):
+        if (len(self.orcafile[idx_hyp].split()) == 1):
             # Raw HFC matrix (all values in MHz):
             # [00] ------------------------------
             # [01] 2.6153               0.1906               0.1416
@@ -448,16 +448,16 @@ class ORCAOutputParser(ORCAParser):
             # [14] Y          -0.8421894           -0.3420471            0.4167983
             # [15] Z           0.5159752           -0.7356214            0.4388972
 
-            atom.hyperfine.amatrix = np.array([self.orcafile[idx+1].split(),
-                                               self.orcafile[idx+2].split(),
-                                               self.orcafile[idx+3].split()], dtype=np.float64)
-            atom.hyperfine.afc = np.asanyarray(self.orcafile[idx+5].split()[1:], dtype=np.float64)
-            atom.hyperfine.asd = np.asanyarray(self.orcafile[idx+6].split()[1:], dtype=np.float64)
-            atottmp = self.orcafile[idx+11].split()[1:]
+            atom.hyperfine.amatrix = np.array([self.orcafile[idx_hyp+1].split(),
+                                               self.orcafile[idx_hyp+2].split(),
+                                               self.orcafile[idx_hyp+3].split()], dtype=np.float64)
+            atom.hyperfine.afc = np.asanyarray(self.orcafile[idx_hyp+5].split()[1:], dtype=np.float64)
+            atom.hyperfine.asd = np.asanyarray(self.orcafile[idx_hyp+6].split()[1:], dtype=np.float64)
+            atottmp = self.orcafile[idx_hyp+11].split()[1:]
             atom.hyperfine.atensor, atom.hyperfine.aiso = np.array([atottmp[0], atottmp[1], atottmp[2]], dtype=np.float64), float(atottmp[-1])
-            atom.hyperfine.aori = np.array([self.orcafile[idx+13].split()[1:],
-                                            self.orcafile[idx+14].split()[1:],
-                                            self.orcafile[idx+15].split()[1:]], dtype=np.float64)
+            atom.hyperfine.aori = np.array([self.orcafile[idx_hyp+13].split()[1:],
+                                            self.orcafile[idx_hyp+14].split()[1:],
+                                            self.orcafile[idx_hyp+15].split()[1:]], dtype=np.float64)
 
         ##############
         ### ORCA 2.9.1
@@ -477,23 +477,65 @@ class ORCAOutputParser(ORCAParser):
             # [11]  Y       0.9936103   -0.0624924   -0.0939856
             # [12]  Z       0.0860870    0.9581490    0.2730193
 
-            # first, we parse the orientation-dependent A-matrix
-            atom.hyperfine.amatrix = np.array([self.orcafile[idx+0].split(),
-                                               self.orcafile[idx+1].split(),
-                                               self.orcafile[idx+2].split()], dtype=np.float64)
+            atom.hyperfine.amatrix = np.array([self.orcafile[idx_hyp+0].split(),
+                                               self.orcafile[idx_hyp+1].split(),
+                                               self.orcafile[idx_hyp+2].split()], dtype=np.float64)
 
-            # then, we parse the decomposition of A into its individual contributions
-            atom.hyperfine.afc = np.asanyarray(self.orcafile[idx+4].split()[1:], dtype=np.float64)
-            atom.hyperfine.asd = np.asanyarray(self.orcafile[idx+5].split()[1:], dtype=np.float64)
-            asotmp = self.orcafile[idx+6].split()[1:]
+            atom.hyperfine.afc = np.asanyarray(self.orcafile[idx_hyp+4].split()[1:], dtype=np.float64)
+            atom.hyperfine.asd = np.asanyarray(self.orcafile[idx_hyp+5].split()[1:], dtype=np.float64)
+            asotmp = self.orcafile[idx_hyp+6].split()[1:]
             atom.hyperfine.aso, atom.hyperfine.apc = np.array([asotmp[0], asotmp[1], asotmp[2]], dtype=np.float64), float(asotmp[-1])
-            atottmp = self.orcafile[idx+8].split()[1:]
+            atottmp = self.orcafile[idx_hyp+8].split()[1:]
             atom.hyperfine.atensor, atom.hyperfine.aiso = np.array([atottmp[0], atottmp[1], atottmp[2]], dtype=np.float64), float(atottmp[-1])
 
-            # finally, we take the orientation
-            atom.hyperfine.aori = np.array([self.orcafile[idx+10].split()[1:],
-                                            self.orcafile[idx+11].split()[1:],
-                                            self.orcafile[idx+12].split()[1:]], dtype=np.float64)
+            atom.hyperfine.aori = np.array([self.orcafile[idx_hyp+10].split()[1:],
+                                            self.orcafile[idx_hyp+11].split()[1:],
+                                            self.orcafile[idx_hyp+12].split()[1:]], dtype=np.float64)
+
+        searchstr = "Raw EFG matrix (all values in a.u.**-3):"
+        # the EFG output comes after the hyperfine output
+        idx_efg = self.get_string_index(searchstr, idx_hyp)
+        # the arrays start at idx + 1
+        if (idx_efg == -1): return
+        idx_efg += (idx_hyp + 1)
+
+        # Raw EFG matrix (all values in a.u.**-3):
+        # [01]           -0.0099       0.2487       0.1679
+        # [02]            0.2487       0.0368      -0.1736
+        # [03]            0.1679      -0.1736      -0.0269
+
+        # [05] V(El)      -0.4732      -0.1364       0.6097
+        # [06] V(Nuc)      0.6032       0.4010      -1.0042
+        #         ----------   ----------   ----------
+        # [08] V(Tot)      0.1300       0.2646      -0.3945
+        # Orientation:
+        # [10] X       0.4690732    0.6390650   -0.6095623
+        # [11] Y      -0.2975070    0.7642073    0.5722559
+        # [12] Z       0.8315407   -0.0870808    0.5485954
+
+
+        # Quadrupole tensor eigenvalues (in MHz;Q= 0.0193 I=  1.0)
+        # [16] e**2qQ            =    -1.792 MHz
+        # [17] e**2qQ/(4I*(2I-1))=    -0.448 MHz
+        # [18] eta               =     0.341
+        #  NOTE: the diagonal representation of the SH term I*Q*I = e**2qQ/(4I(2I-1))*[-(1-eta),-(1+eta),2]
+        atom.efg.vmatrix = np.array([self.orcafile[idx_efg+1].split(),
+                                     self.orcafile[idx_efg+2].split(),
+                                     self.orcafile[idx_efg+3].split()], dtype=np.float64)
+
+        atom.efg.vel = np.asanyarray(self.orcafile[idx_efg+5].split()[1:], dtype=np.float64)
+        atom.efg.vnuc = np.asanyarray(self.orcafile[idx_efg+6].split()[1:], dtype=np.float64)
+        atom.efg.vtot = np.asanyarray(self.orcafile[idx_efg+8].split()[1:], dtype=np.float64)
+
+        atom.efg.vori = np.array([self.orcafile[idx_efg+10].split(),
+                                  self.orcafile[idx_efg+11].split(),
+                                  self.orcafile[idx_efg+12].split()], dtype=np.float64)
+
+        atom.efg.nqcc = float(self.orcafile[idx_efg+16].split()[-2])
+        atom.efg.k = float(self.orcafile[idx_efg+17].split()[-2])
+        atom.efg.eta = float(self.orcafile[idx_efg+18].split()[-1])
+
+        atom.efg._calc_nqi_tensor()
 
         return
 

@@ -15,6 +15,7 @@ class Atom(pc.atom.Atom):
         self.index = index
 
         self.hyperfine = Hyperfine()
+        self.efg = EFG()
         self.euler = Euler()
 
     def __str__(self):
@@ -87,3 +88,35 @@ class Hyperfine:
                             self.atensor[1],
                             self.atensor[2],
                             self.aiso)
+
+class EFG:
+    """
+    """
+    def __init__(self):
+        self.vmatrix = np.array([[nan, nan, nan],
+                                 [nan, nan, nan],
+                                 [nan, nan, nan]])
+        self.vel = np.array([nan, nan, nan])
+        self.vnuc = np.array([nan, nan, nan])
+        self.vtot = np.array([nan, nan, nan])
+        self.vori = np.array([[nan, nan, nan],
+                              [nan, nan, nan],
+                              [nan, nan, nan]])
+
+        self.nqcc = nan
+        self.k = nan
+        self.eta = nan
+
+    def __str__(self):
+        s = "EFG([{0} {1} {2}]; {3})"
+        return s.format(self.vtot[0],
+                        self.vtot[1],
+                        self.vtot[2],
+                        self.herp)
+
+    def _calc_nqi_tensor(self):
+        """
+        """
+        self.px = k * (-(1-self.eta))
+        self.py = k * (-(1+self.eta))
+        self.pz = k * 2
