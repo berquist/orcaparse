@@ -167,6 +167,7 @@ class ORCAOutputParser(ORCAParser):
         if self._has_coords == True:
             self._calc_interatomic_distance()
             self._extract_gtensor()
+            self._extract_molecule_nuclear()
             self._extract_molecule_euler()
 
     def _extract_input_file(self):
@@ -388,7 +389,27 @@ class ORCAOutputParser(ORCAParser):
 
         return
 
-    def _get_nuclear_atom(self, atom):
+    def return_atom_hyperfine(self, atom):
+        """
+        Return the hyperfine tensor and isotropic hyperfine value for the given atom.
+        """
+        return atom.hyperfine.atensor, atom.hyperfine.aiso
+
+    def return_atom_nqcc(self, atom):
+        """
+        Return the nuclear quadrupolar coupling constant for the given atom.
+        """
+        return atom.nqcc
+
+    def _extract_molecule_nuclear(self):
+        """
+        Get all of the fields that may be present in the output file
+        from nuclear property calculations.
+        """
+        for atom in self.molecule:
+            self._extract_atom_nuclear(atom)
+
+    def _extract_atom_nuclear(self, atom):
         """
         Get all of the nuclear properties for a single atom.
         """
@@ -396,14 +417,14 @@ class ORCAOutputParser(ORCAParser):
         # first, find the atom
         searchstr = "Nucleus\s+{}{}".format(atom.index, atom.name)
         idx_nucleus = self.get_regex_index(searchstr)
-        if (idx_nucleus == -1): return atom.hyperfine.atensor, atom.hyperfine.aiso
+        if (idx_nucleus == -1): return 
 
         # gather the hyperfine information
         searchstr = "Raw HFC matrix (all values in MHz):"
         idx = self.get_string_index(searchstr, idx_nucleus)
         # start searching from where we found the atom
         # the arrays start at idx_nucleus + idx + 1
-        if (idx == -1): return atom.hyperfine.atensor, atom.hyperfine.aiso
+        if (idx == -1): return
         idx += (idx_nucleus + 1)
 
         ###############
@@ -474,7 +495,7 @@ class ORCAOutputParser(ORCAParser):
                                             self.orcafile[idx+11].split()[1:],
                                             self.orcafile[idx+12].split()[1:]], dtype=np.float64)
 
-        return atom.hyperfine.atensor, atom.hyperfine.aiso
+        return
 
     def _extract_molecule_euler(self):
         """
@@ -518,70 +539,9 @@ class ORCAOutputParser(ORCAParser):
 
         return
 
-    def _get_nuclear(self):
-        """
-        Get all of the fields that may be present in the output file
-        from nuclear property calculations.
-        """
-        for atom in self.molecule:
-            self._get_nuclear_atom(atom)
-
-    def get_hyperfine(self, atom):
-        """
-
-        """
-        return self._get_nuclear_atom(atom)
-
     def extract_multiple_jobs(self):
         """
 
         """
         pass
 
-    def nitrogen_hyperfine_1st(self):
-        """
-        Return the hyperfine tensor of the closest nitrogen to the copper.
-        """
-        # Searching algorithm:
-        # (1) Find all the nitrogens that are present and assume that there's only one copper
-        # (2) Return the nitrogen-copper distances in the order of the indices from (1)
-        # (3) The list position of the match in (2) corresponds to the list position
-        #     of the id from (1)...phew
-        # (4) Retrieve the stuff from this new id we've found
-
-        # this lets us fail silently on bad output files
-        if not self._has_coords: return (np.array([nan, nan, nan]), nan)
-        ids_n = self.find_element("N")
-        try:
-            id_cu = self.find_element("Cu")[0]
-        except IndexError:
-            return
-        distances = [self.pair_distance(id_cu, n) for n in ids_n]
-        idx = ids_n[distances.index(one_smallest(distances))]
-        hyperfine = self.get_hyperfine(self.molecule[idx])
-        return hyperfine[0], idx, self.molecule[idx]
-
-    def nitrogen_hyperfine_2nd(self):
-        """
-        Return the hyperfine tensor of the second-closest nitrogen to the copper.
-        """
-
-        if not self._has_coords: return (np.array([nan, nan, nan]), nan)
-        ids_n = self.find_element("N")
-        try:
-            id_cu = self.find_element("Cu")[0]
-        except IndexError:
-            return
-        distances = [self.pair_distance(id_cu, n) for n in ids_n]
-        idx = ids_n[distances.index(two_smallest(distances)[1])]
-        hyperfine = self.get_hyperfine(self.molecule[idx])
-        return hyperfine[0], idx, self.molecule[idx]
-
-# if __name__ == "__main__":
-#     from orcaparse import *
-#     import argparse
-
-#     parser = argparse.ArgumentParser(description="A toolbox for creating and parsing ORCA input and output files from the command line or Python scripts.")
-#     parser.add_argument(dest="namelist", metavar="<orca filename>", nargs="+", type=str, default=None, help="ORCA input or output files.")
-#     args = parser.parse_args()
-#     namelist = args.namelist

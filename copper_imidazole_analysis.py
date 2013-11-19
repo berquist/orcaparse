@@ -37,13 +37,13 @@ def nitrogen_far_id(orcafile):
 def hyperfine(orcafile, idx_nucleus):
     """Return the full hyperfine tensor for the given atom id."""
     if np.isnan(idx_nucleus): return np.array([nan, nan, nan])
-    return orcafile.get_hyperfine(orcafile.molecule[idx_nucleus])[0]
+    return orcafile.return_atom_hyperfine(orcafile.molecule[idx_nucleus])[0]
 
 def hyperfine_zz(orcafile, idx_nucleus):
     """Return the A_{zz} element for the given atom id."""
     if np.isnan(idx_nucleus): return nan
     orcafile.get_hyperfine(orcafile.molecule[idx_nucleus])
-    return orcafile.molecule[idx_nucleus].amatrix[2,2]
+    return orcafile.molecule[idx_nucleus].hyperfine.amatrix[2,2]
 
 def euler(orcafile, idx_nucleus):
     """Return the alpha, beta, gamma angles between the given hyperfine
@@ -52,8 +52,9 @@ def euler(orcafile, idx_nucleus):
     return orcafile.molecule[idx_nucleus].euler.hyperfine.return_angles()
 
 def nqcc(orcafile, idx_nucleus):
-    """pass"""
-    pass
+    """Return the nuclear quadrupolar coupling constant for the given atom id."""
+    if np.isnan(idx_nucleus): return nan
+    return orcafile.return_atom_nqcc(orcafile.molecule[idx_nucleus])
 
 def formatted_output_copper_imidazole(namelist):
     """
