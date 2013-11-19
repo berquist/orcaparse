@@ -163,8 +163,10 @@ class ORCAOutputParser(ORCAParser):
         ORCAParser.__init__(self, file_name)
         self.load()
         self._extract_coords()
-        self._calc_interatomic_distance()
-        self._extract_molecule_euler()
+        if self._has_coords == True:
+            self._calc_interatomic_distance()
+            self._extract_gtensor()
+            self._extract_molecule_euler()
 
     def get_input_file(self):
         """
@@ -279,7 +281,14 @@ class ORCAOutputParser(ORCAParser):
             self.molecule.append(Atom(i, atom[0], np.array([atom[1], atom[2], atom[3]], dtype=np.float64)))
         self.natoms = len(self.molecule)
 
-    def get_gtensor(self):
+    def return_gtensor(self):
+        """
+        Return the electronic g-tensor and isotropic g-value of the molecule
+        from the output file.
+        """
+        return self.molecule.gtensor.gtensor, self.molecule.gtensor.giso
+
+    def _extract_gtensor(self):
         """
         Extract the electronic g-tensor from the output file.
         """
@@ -290,7 +299,7 @@ class ORCAOutputParser(ORCAParser):
                 # we add 4 to start at the first row in the g-matrix
                 idx = i + 4
                 break
-        if (idx == 0): return self.molecule.gtensor.gtensor, self.molecule.gtensor.giso
+        if (idx == 0): return
 
         # Here is a sample of what we would like to parse (printlevel = 5):
         # -------------------
@@ -379,15 +388,12 @@ class ORCAOutputParser(ORCAParser):
                                   self.orcafile[idx+17].split()[1:],
                                   self.orcafile[idx+18].split()[1:]], dtype=np.float64)
 
-        return self.molecule.gtensor.gtensor, self.molecule.gtensor.giso
+        return
 
     def _get_nuclear_atom(self, atom):
         """
         Get all of the nuclear properties for a single atom.
         """
-
-        # if the atom doesn't have coordinates, this isn't going to work
-        if not self._has_coords: return atom_hyperfine.atensor, atom.hyperfine.aiso
 
         # first, find the atom
         searchstr = "Nucleus\s+{}{}".format(atom.index, atom.name)
@@ -511,6 +517,8 @@ class ORCAOutputParser(ORCAParser):
             self.molecule[idx_nucleus].euler.efg.efgx = tmpline[3]
             self.molecule[idx_nucleus].euler.efg.efgy = tmpline[4]
             self.molecule[idx_nucleus].euler.efg.efgz = tmpline[5]
+
+        return
 
     def _get_nuclear(self):
         """

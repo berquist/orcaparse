@@ -66,7 +66,7 @@ def formatted_output_copper_imidazole(namelist):
     for name in namelist:
 
         orcafile = orca_parser.ORCAOutputParser(name)
-        gtensor, giso = orcafile.get_gtensor()
+        gtensor, giso = orcafile.return_gtensor()
         id_cu, id_far = copper_id(orcafile), nitrogen_far_id(orcafile)
         atensor_cu, atensor_far = hyperfine(orcafile, id_cu), hyperfine(orcafile, id_far)
         euler_cu, euler_far = euler(orcafile, id_cu), euler(orcafile, id_far)
