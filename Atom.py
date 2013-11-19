@@ -9,7 +9,7 @@ class Atom(pc.atom.Atom):
     Allow each atom to contain more specific quantum chemical properties
     than piratechem can currently handle.
     """
-    def __init__(self, name, r):
+    def __init__(self, index, name, r):
         pc.atom.Atom.__init__(self, name, r)
 
         # storage for hyperfine values
@@ -18,21 +18,26 @@ class Atom(pc.atom.Atom):
                                  [nan, nan, nan]])
         self.atensor = np.array([nan, nan, nan])
         self.aiso = nan
-
+        self.index = index
         self.hyperfine = Hyperfine()
         self.euler = Euler()
 
     def __str__(self):
-        s = "Atom(%s, [%6.3f, %6.3f, %6.3f])"
-        return s % (self.name, self.posx, self.posy, self.posz)
+        s = "Atom(%d, %s, [%6.3f, %6.3f, %6.3f])"
+        return s % (self.index, self.name, self.posx, self.posy, self.posz)
 
 class Euler:
     """
     Store all possible Euler angle information for a single atom.
     """
+    def __init__(self):
+        self.hyperfine = self.Hyperfine()
+        self.efg = self.EFG()
 
     class Hyperfine:
-        alpha = beta = gamma = ax = ay = az = nan
+        def __init__(self):
+            self.alpha = self.beta = self.gamma = nan
+            self.ax = self.ay = self.az = nan
 
         def __str__(self):
             s = "EulerHyperfine([{0}, {1}, {2}]; [{3} {4} {5}])"
@@ -46,7 +51,9 @@ class Euler:
             return np.array([self.alpha, self.beta, self.gamma])
 
     class EFG:
-        alpha = beta = gamma = efgx = efgy = efgz = nan
+        def __init__(self):
+            self.alpha = self.beta = self.gamma = nan
+            self.efgx = self.efgy = self.efgz = nan
 
         def __str__(self):
             s = "EulerEFG([{0}, {1}, {2}]; [{3} {4} {5}])"
@@ -58,9 +65,6 @@ class Euler:
             Return the three angles as a NumPy row vector.
             """
             return np.array([self.alpha, self.beta, self.gamma])
-
-    hyperfine = Hyperfine()
-    efg = EFG()
 
 class Hyperfine:
     """
@@ -79,6 +83,3 @@ class Hyperfine:
                         self.atensor[1],
                         self.atensor[2],
                         self.aiso)
-
-if __name__ == "__main__":
-    herp = Atom("herp", (3,3,3))

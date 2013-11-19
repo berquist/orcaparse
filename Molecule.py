@@ -14,8 +14,20 @@ class Molecule(pc.molecule.Molecule):
 
         self.gtensor = GTensor()
 
+    def __getitem__(self, key):
+        return self.atoms[key]
+
     def __str__(self):
+        """
+        Allow for pretty-printing a molecule.
+        """
         return ""
+
+    def append(self, atom):
+        """
+        Append an Atom directly on to a Molecule.
+        """
+        self.atoms.append(atom)
 
 class GTensor:
     """

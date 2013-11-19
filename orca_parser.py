@@ -4,6 +4,7 @@ import numpy as np
 from numpy import nan
 import mmap
 import re
+import os
 
 import piratechem as pc
 from piratechem.utils import one_smallest, two_smallest
@@ -27,13 +28,10 @@ class ORCAParser:
     def __init__(self, file_name):
         self.file_name = file_name
         self.orcafile = []
-        self.molecule = []
+        self.molecule = Molecule(os.path.basename(os.path.splitext(self.file_name)[0]))
         self._has_coords = False
         self.keywords = []
         self.blocks = []
-
-        self.gtensor = np.array([nan, nan, nan])
-        self.giso = nan
 
     def __str__(self):
         # BUGS BUGS BUGS FIX FIX FIX
@@ -278,8 +276,7 @@ class ORCAOutputParser(ORCAParser):
             if (line == "\n"):
                 break
             atom = line.split()
-            self.molecule.append(Atom(atom[0], np.array([atom[1], atom[2], atom[3]], dtype=np.float64)))
-            self.molecule[i].index = i
+            self.molecule.append(Atom(i, atom[0], np.array([atom[1], atom[2], atom[3]], dtype=np.float64)))
         self.natoms = len(self.molecule)
 
     def get_gtensor(self):
@@ -293,7 +290,7 @@ class ORCAOutputParser(ORCAParser):
                 # we add 4 to start at the first row in the g-matrix
                 idx = i + 4
                 break
-        if (idx == 0): return self.gtensor, self.giso
+        if (idx == 0): return self.molecule.gtensor.gtensor, self.molecule.gtensor.giso
 
         # Here is a sample of what we would like to parse (printlevel = 5):
         # -------------------
@@ -343,47 +340,46 @@ class ORCAOutputParser(ORCAParser):
         # [13] Y          -0.3699085   -0.2963004    0.8805531
         # [14] Z           0.8859659    0.1728345    0.4303401
 
-        self.gel = 2.0023193
         # first, we parse the orientation-dependent g-matrix
-        self.gmatrix = np.array([self.orcafile[idx+0].split(),
-                                 self.orcafile[idx+1].split(),
-                                 self.orcafile[idx+2].split()], dtype=np.float64)
+        self.molecule.gtensor.gmatrix = np.array([self.orcafile[idx+0].split(),
+                                                  self.orcafile[idx+1].split(),
+                                                  self.orcafile[idx+2].split()], dtype=np.float64)
 
         # then, we parse the decomposition of delta_g into its individual contributions
         # we need to handle both the standard output level and %eprnmr printlevel = 5
-        self.grmc = np.asanyarray(self.orcafile[idx+5].split()[1:], dtype=np.float64)
+        self.molecule.gtensor.grmc = np.asanyarray(self.orcafile[idx+5].split()[1:], dtype=np.float64)
 
         if (self.orcafile[idx+8].split()[1:] == ['----------', '----------']):
-            self.gdsotot = np.asanyarray(self.orcafile[idx+6].split()[1:], dtype=np.float64)
-            self.gpsotot = np.asanyarray(self.orcafile[idx+7].split()[1:], dtype=np.float64)
+            self.molecule.gtensor.gdsotot = np.asanyarray(self.orcafile[idx+6].split()[1:], dtype=np.float64)
+            self.molecule.gtensor.gpsotot = np.asanyarray(self.orcafile[idx+7].split()[1:], dtype=np.float64)
             gtottmp = self.orcafile[idx+9].split()[1:]
             delgtmp = self.orcafile[idx+10].split()[1:]
-            self.giso, self.dgiso = float(gtottmp[4]), float(delgtmp[4])
-            self.gtensor = np.array([gtottmp[0], gtottmp[1], gtottmp[2]], dtype=np.float64)
-            self.delgtensor = np.array([delgtmp[0], delgtmp[1], delgtmp[2]], dtype=np.float64)
-            self.gori = np.array([self.orcafile[idx+12].split()[1:],
-                                  self.orcafile[idx+13].split()[1:],
-                                  self.orcafile[idx+14].split()[1:]], dtype=np.float64)
+            self.molecule.gtensor.giso, self.molecule.gtensor.dgiso = float(gtottmp[4]), float(delgtmp[4])
+            self.molecule.gtensor.gtensor = np.array([gtottmp[0], gtottmp[1], gtottmp[2]], dtype=np.float64)
+            self.molecule.gtensor.delgtensor = np.array([delgtmp[0], delgtmp[1], delgtmp[2]], dtype=np.float64)
+            self.molecule.gtensor.gori = np.array([self.orcafile[idx+12].split()[1:],
+                                                   self.orcafile[idx+13].split()[1:],
+                                                   self.orcafile[idx+14].split()[1:]], dtype=np.float64)
 
         else:
-            self.gdso1el = np.asanyarray(self.orcafile[idx+6].split()[1:], dtype=np.float64)
-            self.gdso2el = np.asanyarray(self.orcafile[idx+7].split()[1:], dtype=np.float64)
-            self.gdsotot = np.asanyarray(self.orcafile[idx+8].split()[1:], dtype=np.float64)
-            self.gpso1el = np.asanyarray(self.orcafile[idx+9].split()[1:], dtype=np.float64)
-            self.gpso2el = np.asanyarray(self.orcafile[idx+10].split()[1:], dtype=np.float64)
-            self.gpsotot = np.asanyarray(self.orcafile[idx+11].split()[1:], dtype=np.float64)
+            self.molecule.gtensor.gdso1el = np.asanyarray(self.orcafile[idx+6].split()[1:], dtype=np.float64)
+            self.molecule.gtensor.gdso2el = np.asanyarray(self.orcafile[idx+7].split()[1:], dtype=np.float64)
+            self.molecule.gtensor.gdsotot = np.asanyarray(self.orcafile[idx+8].split()[1:], dtype=np.float64)
+            self.molecule.gtensor.gpso1el = np.asanyarray(self.orcafile[idx+9].split()[1:], dtype=np.float64)
+            self.molecule.gtensor.gpso2el = np.asanyarray(self.orcafile[idx+10].split()[1:], dtype=np.float64)
+            self.molecule.gtensor.gpsotot = np.asanyarray(self.orcafile[idx+11].split()[1:], dtype=np.float64)
             # then, we take the final tensors plus their isotropic values
             gtottmp = self.orcafile[idx+13].split()[1:]
             delgtmp = self.orcafile[idx+14].split()[1:]
-            self.giso, self.dgiso = float(gtottmp[4]), float(delgtmp[4])
-            self.gtensor = np.array([gtottmp[0], gtottmp[1], gtottmp[2]], dtype=np.float64)
-            self.delgtensor = np.array([delgtmp[0], delgtmp[1], delgtmp[2]], dtype=np.float64)
+            self.molecule.gtensor.giso, self.molecule.gtensor.dgiso = float(gtottmp[4]), float(delgtmp[4])
+            self.molecule.gtensor.gtensor = np.array([gtottmp[0], gtottmp[1], gtottmp[2]], dtype=np.float64)
+            self.molecule.gtensor.delgtensor = np.array([delgtmp[0], delgtmp[1], delgtmp[2]], dtype=np.float64)
             # finally, we take the orientation
-            self.gori = np.array([self.orcafile[idx+16].split()[1:],
+            self.molecule.gtensor.gori = np.array([self.orcafile[idx+16].split()[1:],
                                   self.orcafile[idx+17].split()[1:],
                                   self.orcafile[idx+18].split()[1:]], dtype=np.float64)
 
-        return self.gtensor, self.giso
+        return self.molecule.gtensor.gtensor, self.molecule.gtensor.giso
 
     def _get_nuclear_atom(self, atom):
         """
@@ -457,7 +453,7 @@ class ORCAOutputParser(ORCAParser):
             # [10]  X       0.0729906   -0.2793657    0.9574065
             # [11]  Y       0.9936103   -0.0624924   -0.0939856
             # [12]  Z       0.0860870    0.9581490    0.2730193
-            print self.file_name
+
             # first, we parse the orientation-dependent A-matrix
             atom.amatrix = np.array([self.orcafile[idx+0].split(),
                                      self.orcafile[idx+1].split(),
@@ -482,17 +478,16 @@ class ORCAOutputParser(ORCAParser):
         """
         Extract all of the Euler rotation angles from the output file.
         """
+        endline = "-------------------------------------------------------------------"
+
         searchstr = "Euler rotation of hyperfine tensor to g-tensor"
         idx = self.get_string_index(searchstr)
-        if (idx == -1):
-            pass
+        if (idx == -1): return
         idx += 7
 
-        endline = "-------------------------------------------------------------------"
-        for i, line in enumerate(self.orcafile[idx:]):
+        for line in self.orcafile[idx:]:
             tmpline = line.split()
-            if (tmpline == []) or (tmpline[0] == endline):
-                break
+            if (tmpline == []) or (tmpline[0] == endline): break
             idx_nucleus = int(only_numerics(tmpline[0]))
             tmpline[:] = [float(i) for i in tmpline[1:]]
             self.molecule[idx_nucleus].euler.hyperfine.alpha = tmpline[0]
@@ -504,14 +499,12 @@ class ORCAOutputParser(ORCAParser):
 
         searchstr = "Euler rotation of Electric Field Gradient (EFG) tensor to g-tensor"
         idx = self.get_string_index(searchstr)
-        if (idx == -1):
-            pass
+        if (idx == -1): return
         idx += 7
 
-        for i, line in enumerate(self.orcafile[idx:]):
+        for line in self.orcafile[idx:]:
             tmpline = line.split()
-            if (tmpline == []) or (tmpline[0] == endline):
-                break
+            if (tmpline == []) or (tmpline[0] == endline): break
             idx_nucleus = int(only_numerics(tmpline[0]))
             tmpline[:] = [float(i) for i in tmpline[1:]]
             self.molecule[idx_nucleus].euler.efg.alpha = tmpline[0]
