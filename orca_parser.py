@@ -48,6 +48,7 @@ class ORCAParser:
         """
         handle = open(self.file_name, "r+b")
         self.orcafile = handle.readlines()
+        handle.close()
 
     def load_map(self):
         """

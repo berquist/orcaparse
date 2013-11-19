@@ -107,12 +107,17 @@ class EFG:
         self.k = nan
         self.eta = nan
 
+        self.px = nan
+        self.py = nan
+        self.pz = nan
+        self.p = np.array([nan, nan, nan])
+
     def __str__(self):
         s = "EFG([{0} {1} {2}]; {3})"
         return s.format(self.vtot[0],
                         self.vtot[1],
                         self.vtot[2],
-                        self.herp)
+                        self.nqcc)
 
     def _calc_nqi_tensor(self):
         """
