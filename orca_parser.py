@@ -217,23 +217,23 @@ class ORCAOutputParser(ORCAParser):
         # the first line contains the short file name
         input_file_name = trimmed_inpdeck.next()[0]
 
-        for line in trimmed_inpdeck:
-            # match general input
-            if (line[0] == '!'):
-                for word in line[3:]:
-                    self.keywords.append(word)
-            # match an input block
-            # if (line[0][0] == '%'):
-            #     blockname = line[0][1:].strip()
-            #     self.blockname = dict()
-            #     raw_inpdeck.next()
-            #     while (line[0] != 'end'):
-            #         print line
-            #         self.blockname[line[0]] = line[1]
-            #         continue
-            #     self.blocks['{}'.format(blockname)] = blockname
-        print self.keywords
-        print self.blocks
+        # for line in trimmed_inpdeck:
+        #     # match general input
+        #     if (line[0] == '!'):
+        #         for word in line[3:]:
+        #             self.keywords.append(word)
+        #     # match an input block
+        #     # if (line[0][0] == '%'):
+        #     #     blockname = line[0][1:].strip()
+        #     #     self.blockname = dict()
+        #     #     raw_inpdeck.next()
+        #     #     while (line[0] != 'end'):
+        #     #         print line
+        #     #         self.blockname[line[0]] = line[1]
+        #     #         continue
+        #     #     self.blocks['{}'.format(blockname)] = blockname
+        # print self.keywords
+        # print self.blocks
 
     def get_energy(self, string_to_search = None):
         pass
