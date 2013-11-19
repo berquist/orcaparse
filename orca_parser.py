@@ -211,27 +211,25 @@ class ORCAOutputParser(ORCAParser):
 
         raw_inpdeck = (line.strip().split() for line in self.orcafile[idxstart:idxend])
 
-        # the first line contains the short file name
-        input_file_name = raw_inpdeck.next()[-1]
-        print input_file_name
+        # remove lines that only have "| num>"
+        trimmed_inpdeck = (line[2:] for line in raw_inpdeck if len(line) > 2)
 
-        for line in raw_inpdeck:
-            # skip lines that don't contain anything
-            if (len(line) == 2):
-                continue
-            print line
+        # the first line contains the short file name
+        input_file_name = trimmed_inpdeck.next()[0]
+
+        for line in trimmed_inpdeck:
             # match general input
-            if (line[2] == '!'):
+            if (line[0] == '!'):
                 for word in line[3:]:
                     self.keywords.append(word)
-            # # match an input block
-            # if (line[2][0] == '%'):
-            #     blockname = line[2][1:].strip()
+            # match an input block
+            # if (line[0][0] == '%'):
+            #     blockname = line[0][1:].strip()
             #     self.blockname = dict()
             #     raw_inpdeck.next()
-            #     while (line[2] != 'end'):
+            #     while (line[0] != 'end'):
             #         print line
-            #         self.blockname[line[2]] = line[3]
+            #         self.blockname[line[0]] = line[1]
             #         continue
             #     self.blocks['{}'.format(blockname)] = blockname
         print self.keywords
