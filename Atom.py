@@ -12,13 +12,8 @@ class Atom(pc.atom.Atom):
     def __init__(self, index, name, r):
         pc.atom.Atom.__init__(self, name, r)
 
-        # storage for hyperfine values
-        self.amatrix = np.array([[nan, nan, nan],
-                                 [nan, nan, nan],
-                                 [nan, nan, nan]])
-        self.atensor = np.array([nan, nan, nan])
-        self.aiso = nan
         self.index = index
+
         self.hyperfine = Hyperfine()
         self.euler = Euler()
 
@@ -71,15 +66,24 @@ class Hyperfine:
     Hold all of the fields that may be present in the output file
     from nuclear property calculations.
     """
-    aiso = nan
-    atensor = np.array([nan, nan, nan])
-    amatrix = np.array([[nan, nan, nan],
-                        [nan, nan, nan],
-                        [nan, nan, nan]])
+    def __init__(self):
+        self.aiso = nan
+        self.atensor = np.array([nan, nan, nan])
+        self.amatrix = np.array([[nan, nan, nan],
+                                 [nan, nan, nan],
+                                 [nan, nan, nan]])
 
-    def __str__(self):
-        s = "Hyperfine([{0} {1} {2}]; {3})"
-        return s.format(self.atensor[0],
-                        self.atensor[1],
-                        self.atensor[2],
-                        self.aiso)
+        self.afc = np.array([nan, nan, nan])
+        self.asd = np.array([nan, nan, nan])
+        self.aso = np.array([nan, nan, nan])
+        self.apc = nan
+        self.aori = np.array([[nan, nan, nan],
+                              [nan, nan, nan],
+                              [nan, nan, nan]])
+
+        def __str__(self):
+            s = "Hyperfine([{0} {1} {2}]; {3})"
+            return s.format(self.atensor[0],
+                            self.atensor[1],
+                            self.atensor[2],
+                            self.aiso)

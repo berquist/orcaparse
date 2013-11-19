@@ -405,7 +405,6 @@ class ORCAOutputParser(ORCAParser):
         ###############
         ### ORCA 3.0.0
         if (len(self.orcafile[idx].split()) == 1):
-
             # Raw HFC matrix (all values in MHz):
             # [00] ------------------------------
             # [01] 2.6153               0.1906               0.1416
@@ -424,17 +423,16 @@ class ORCAOutputParser(ORCAParser):
             # [14] Y          -0.8421894           -0.3420471            0.4167983
             # [15] Z           0.5159752           -0.7356214            0.4388972
 
-            atom.amatrix = np.array([self.orcafile[idx+1].split(),
-                                     self.orcafile[idx+2].split(),
-                                     self.orcafile[idx+3].split()], dtype=np.float64)
-            atom.afc = np.asanyarray(self.orcafile[idx+5].split()[1:], dtype=np.float64)
-            atom.asd = np.asanyarray(self.orcafile[idx+6].split()[1:], dtype=np.float64)
+            atom.hyperfine.amatrix = np.array([self.orcafile[idx+1].split(),
+                                               self.orcafile[idx+2].split(),
+                                               self.orcafile[idx+3].split()], dtype=np.float64)
+            atom.hyperfine.afc = np.asanyarray(self.orcafile[idx+5].split()[1:], dtype=np.float64)
+            atom.hyperfine.asd = np.asanyarray(self.orcafile[idx+6].split()[1:], dtype=np.float64)
             atottmp = self.orcafile[idx+11].split()[1:]
-            atom.atensor, atom.aiso = np.array([atottmp[0], atottmp[1], atottmp[2]], dtype=np.float64), float(atottmp[-1])
-            atom.aori = np.array([self.orcafile[idx+13].split()[1:],
-                                  self.orcafile[idx+14].split()[1:],
-                                  self.orcafile[idx+15].split()[1:]], dtype=np.float64)
-
+            atom.hyperfine.atensor, atom.hyperfine.aiso = np.array([atottmp[0], atottmp[1], atottmp[2]], dtype=np.float64), float(atottmp[-1])
+            atom.hyperfine.aori = np.array([self.orcafile[idx+13].split()[1:],
+                                            self.orcafile[idx+14].split()[1:],
+                                            self.orcafile[idx+15].split()[1:]], dtype=np.float64)
 
         ##############
         ### ORCA 2.9.1
@@ -455,24 +453,24 @@ class ORCAOutputParser(ORCAParser):
             # [12]  Z       0.0860870    0.9581490    0.2730193
 
             # first, we parse the orientation-dependent A-matrix
-            atom.amatrix = np.array([self.orcafile[idx+0].split(),
-                                     self.orcafile[idx+1].split(),
-                                     self.orcafile[idx+2].split()], dtype=np.float64)
+            atom.hyperfine.amatrix = np.array([self.orcafile[idx+0].split(),
+                                               self.orcafile[idx+1].split(),
+                                               self.orcafile[idx+2].split()], dtype=np.float64)
 
             # then, we parse the decomposition of A into its individual contributions
-            atom.afc = np.asanyarray(self.orcafile[idx+4].split()[1:], dtype=np.float64)
-            atom.asd = np.asanyarray(self.orcafile[idx+5].split()[1:], dtype=np.float64)
+            atom.hyperfine.afc = np.asanyarray(self.orcafile[idx+4].split()[1:], dtype=np.float64)
+            atom.hyperfine.asd = np.asanyarray(self.orcafile[idx+5].split()[1:], dtype=np.float64)
             asotmp = self.orcafile[idx+6].split()[1:]
-            atom.aso, atom.apc = np.array([asotmp[0], asotmp[1], asotmp[2]], dtype=np.float64), float(asotmp[-1])
+            atom.hyperfine.aso, atom.hyperfine.apc = np.array([asotmp[0], asotmp[1], asotmp[2]], dtype=np.float64), float(asotmp[-1])
             atottmp = self.orcafile[idx+8].split()[1:]
-            atom.atensor, atom.aiso = np.array([atottmp[0], atottmp[1], atottmp[2]], dtype=np.float64), float(atottmp[-1])
+            atom.hyperfine.atensor, atom.hyperfine.aiso = np.array([atottmp[0], atottmp[1], atottmp[2]], dtype=np.float64), float(atottmp[-1])
 
             # finally, we take the orientation
-            atom.aori = np.array([self.orcafile[idx+10].split()[1:],
-                                  self.orcafile[idx+11].split()[1:],
-                                  self.orcafile[idx+12].split()[1:]], dtype=np.float64)
+            atom.hyperfine.aori = np.array([self.orcafile[idx+10].split()[1:],
+                                            self.orcafile[idx+11].split()[1:],
+                                            self.orcafile[idx+12].split()[1:]], dtype=np.float64)
 
-        return atom.atensor, atom.aiso
+        return atom.hyperfine.atensor, atom.hyperfine.aiso
 
     def _get_euler(self):
         """
