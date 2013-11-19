@@ -10,6 +10,7 @@ from piratechem.utils import one_smallest, two_smallest
 from piratechem.utils import only_numerics
 
 from Atom import Atom
+from Molecule import Molecule
 
 class ORCAParser:
     """
@@ -129,13 +130,23 @@ class ORCAParser:
         """
         pass
 
-    def get_string_index(self, string_to_search):
+    def get_string_index(self, string_to_search, start_index=0):
         """
         Returns the index for the line containing the given string.
         (case-sensitive)
         """
-        for idx, line in enumerate(self.orcafile):
+        for idx, line in enumerate(self.orcafile[start_index:]):
             if (line.find(string_to_search) > -1):
+                return idx
+        return -1
+
+    def get_regex_index(self, regex_to_search, start_index=0):
+        """
+        Returns the index for the line matching the given regular
+        expression string. (case-sensitive)
+        """
+        for idx, line in enumerate(self.orcafile[start_index:]):
+            if (re.search(regex_to_search, line) is not None):
                 return idx
         return -1
 
@@ -380,34 +391,27 @@ class ORCAOutputParser(ORCAParser):
         """
 
         # if the atom doesn't have coordinates, this isn't going to work
-        if not self._has_coords: return (np.array([nan, nan, nan]), nan)
+        if not self._has_coords: return atom_hyperfine.atensor, atom.hyperfine.aiso
 
         # first, find the atom
-        idx_nucleus = 0
         searchstr = "Nucleus\s+{}{}".format(atom.index, atom.name)
-        for i, line in enumerate(self.orcafile):
-            if (re.search(searchstr, line) is not None):
-                # the first line we match contains information
-                idx_nucleus = i
-                break
-        if (idx_nucleus == 0): return atom.atensor, atom.aiso
+        idx_nucleus = self.get_regex_index(searchstr)
+        if (idx_nucleus == -1): return atom.hyperfine.atensor, atom.hyperfine.aiso
 
         # gather the hyperfine information
-        idx = 0
         searchstr = "Raw HFC matrix (all values in MHz):"
-        for i, line in enumerate(self.orcafile[idx_nucleus:]):
-            if (line.find(searchstr) > -1):
-                # start at the first row of the A-matrix
-                idx = idx_nucleus + i + 1
-                break
-        if (idx == 0): return atom.atensor, atom.aiso
+        idx = self.get_string_index(searchstr, idx_nucleus)
+        # start searching from where we found the atom
+        # the arrays start at idx_nucleus + idx + 1
+        if (idx == -1): return atom.hyperfine.atensor, atom.hyperfine.aiso
+        idx += (idx_nucleus + 1)
 
         ###############
         ### ORCA 3.0.0
         if (len(self.orcafile[idx].split()) == 1):
 
             # Raw HFC matrix (all values in MHz):
-            # ------------------------------
+            # [00] ------------------------------
             # [01] 2.6153               0.1906               0.1416
             # [02] 0.1871               2.2165               0.2023
             # [03] 0.1370               0.1969               2.3443
@@ -453,7 +457,7 @@ class ORCAOutputParser(ORCAParser):
             # [10]  X       0.0729906   -0.2793657    0.9574065
             # [11]  Y       0.9936103   -0.0624924   -0.0939856
             # [12]  Z       0.0860870    0.9581490    0.2730193
-
+            print self.file_name
             # first, we parse the orientation-dependent A-matrix
             atom.amatrix = np.array([self.orcafile[idx+0].split(),
                                      self.orcafile[idx+1].split(),

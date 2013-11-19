@@ -73,7 +73,7 @@ def formatted_output_copper_imidazole(namelist):
 
         a = abs(atensor_cu[-1])
         s = "{:>34s} {:>28s} {:>20s} {:>3d} {:>25s} {:>20s} {:>3d} {:<s}"
-        print s.format(gtensor, atensor_cu, euler_cu, id_cu, atensor_far, euler_far, id_far, "derp")
+        print s.format(gtensor, atensor_cu, euler_cu, id_cu, atensor_far, euler_far, id_far, name)
 
 if __name__ == "__main__":
     import argparse

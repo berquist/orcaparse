@@ -1,9 +1,10 @@
 #!/usr/bin/env python2
 
+import piratechem as pc
 import numpy as np
 from numpy import nan
 
-class Molecule(pc.molecule.Molecule)
+class Molecule(pc.molecule.Molecule):
     """
     Allow each molecule to contain more specific quantum chemical properties
     than piratechem can currently handle.
