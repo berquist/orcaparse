@@ -162,20 +162,20 @@ class ORCAOutputParser(ORCAParser):
     def __init__(self, file_name):
         ORCAParser.__init__(self, file_name)
         self.load()
+        self._extract_input_file()
         self._extract_coords()
         if self._has_coords == True:
             self._calc_interatomic_distance()
             self._extract_gtensor()
             self._extract_molecule_euler()
 
-    def get_input_file(self):
+    def _extract_input_file(self):
         """
+        Extract the original input file from the output file.
         """
         searchstr = "INPUT FILE"
-        for i, line in enumerate(self.orcafile):
-            if (line.find(searchstr) > -1):
-                idxstart = i + 2
-
+        idxstart = self.get_string_index(searchstr)
+        idxstart += 2
         # [00] NAME = SVP_decontract.inp
         # [01] |  1> ! uks pbe0 def2-svp def2-svp/jk ri rijk pmodel somf(1x) noautostart tightscf grid5 decontract
         # |  2>
@@ -206,36 +206,36 @@ class ORCAOutputParser(ORCAParser):
 
         # search for the end of input so we don't loop like crazy
         searchstr = "****END OF INPUT****"
-        for i, line in enumerate(self.orcafile[idxstart:]):
-            if (line.find(searchstr) > -1):
-                idxend = idxstart + i
+        idxend = self.get_string_index(searchstr, idxstart)
+        idxend += idxstart
 
-        # deck = enumerate(line.strip().split() for line in self.orcafile[idxstart:idxend])
-        # templist = list(deck)
-        # decklist = [line[1] for line in templist[:]]
-        inpdeck = [line.strip().split() for line in self.orcafile[idxstart:idxend]]
+        raw_inpdeck = (line.strip().split() for line in self.orcafile[idxstart:idxend])
 
-        # for line in inpdeck:
-        #     # skip over lines that don't have anything
-        #     if (len(line) == 2):
-        #         continue
-        #     # try and match the general input first
-        #     if (line[2] == '!'):
-        #         for word in line[3:]:
-        #             self.keywords.append(word)
-        #     # match an input block
-        #     if (line[2][0] == '%'):
-        #         blockname = line[2][1:].strip()
-        #         print blockname
-        #         self.blockname = dict()
-        #         continue
-        #         while (line[2] != 'end'):
-        #             print line
-        #             self.blockname[line[2]] = line[3]
-        #             continue
-        #         print self.blockname
-        #         self.blocks['{}'.format(blockname)] = blockname
-        # print self.blocks
+        # the first line contains the short file name
+        input_file_name = raw_inpdeck.next()[-1]
+        print input_file_name
+
+        for line in raw_inpdeck:
+            # skip lines that don't contain anything
+            if (len(line) == 2):
+                continue
+            print line
+            # match general input
+            if (line[2] == '!'):
+                for word in line[3:]:
+                    self.keywords.append(word)
+            # # match an input block
+            # if (line[2][0] == '%'):
+            #     blockname = line[2][1:].strip()
+            #     self.blockname = dict()
+            #     raw_inpdeck.next()
+            #     while (line[2] != 'end'):
+            #         print line
+            #         self.blockname[line[2]] = line[3]
+            #         continue
+            #     self.blocks['{}'.format(blockname)] = blockname
+        print self.keywords
+        print self.blocks
 
     def get_energy(self, string_to_search = None):
         pass
