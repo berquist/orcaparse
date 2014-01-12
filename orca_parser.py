@@ -34,9 +34,10 @@ class ORCAParser:
         self.blocks = []
 
     def __str__(self):
-        # BUGS BUGS BUGS FIX FIX FIX
-        for line in self.orcafile:
-            print line
+        if self.orcafile == []:
+            return "empty"
+        else:
+            return "loaded"
 
     def reset(self):
         pass

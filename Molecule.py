@@ -11,10 +11,11 @@ class Molecule(pc.molecule.Molecule):
     """
     def __init__(self, name):
         pc.molecule.Molecule.__init__(self, name)
-
         self.gtensor = GTensor()
 
     def __getitem__(self, key):
+        """
+        """
         return self.atoms[key]
 
     def __str__(self):
