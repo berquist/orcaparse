@@ -22,7 +22,10 @@ class Molecule(pc.molecule.Molecule):
         """
         Allow for pretty-printing a molecule.
         """
-        return ""
+        s = ""
+        for atom in self.atoms:
+            s += atom.__str__() + "\n"
+        return s
 
     def append(self, atom):
         """

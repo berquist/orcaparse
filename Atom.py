@@ -3,6 +3,7 @@
 import piratechem as pc
 import numpy as np
 from numpy import nan
+import scipy.linalg as spl
 
 class Atom(pc.atom.Atom):
     """
@@ -14,6 +15,7 @@ class Atom(pc.atom.Atom):
 
         self.index = index
 
+        self.nmr = NMR()
         self.hyperfine = Hyperfine()
         self.efg = EFG()
         self.euler = Euler()
@@ -61,6 +63,56 @@ class Euler:
             Return the three angles as a NumPy row vector.
             """
             return np.array([self.alpha, self.beta, self.gamma])
+
+class NMR:
+    """
+    Hold all of the fields that may be present in the output file
+    from an NMR shift calculation.
+    """
+    def __init__(self):
+        self.shiftmat = np.array([[nan, nan, nan],
+                                  [nan, nan, nan],
+                                  [nan, nan, nan]])
+        self.sdso = np.array([nan, nan, nan])
+        self.spso = np.array([nan, nan, nan])
+        self.shiftpri = np.array([nan, nan, nan])
+        self.sdso_iso = nan
+        self.spso_iso = nan
+        self.shiftiso = nan
+        self.shiftori = np.array([[nan, nan, nan],
+                                  [nan, nan, nan],
+                                  [nan, nan, nan]])
+
+        self.eigvals = np.array([nan, nan, nan])
+        self.iso = nan
+
+    def __str__(self):
+        s = "NMR([{0} {1} {2}]; {3})"
+        return s.format(self.shiftpri[0],
+                        self.shiftpri[1],
+                        self.shiftpri[2],
+                        self.shiftiso)
+
+    def _scale(self):
+        """
+        Convert the absolute values given by ORCA to ppm.
+        """
+        abs_to_ppm = 1e6
+        self.shiftmat *= abs_to_ppm
+        self.sdso *= abs_to_ppm
+        self.spso *= abs_to_ppm
+        self.shiftpri *= abs_to_ppm
+        self.sdso_iso *= abs_to_ppm
+        self.spso_iso *= abs_to_ppm
+        self.shiftiso *= abs_to_ppm
+
+    def _diag(self):
+        """
+        Diagonalize the raw shift matrix to get the three principal shift
+        values and an isotropic result.
+        """
+        self.eigvals = np.sqrt(spl.eigvalsh(np.dot(self.shiftmat.T, self.shiftmat)))
+        self.iso = np.sum(self.eigvals) / 3.0
 
 class Hyperfine:
     """

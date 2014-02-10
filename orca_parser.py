@@ -94,8 +94,8 @@ class ORCAParser:
 
     def _calc_interatomic_distance(self):
         distance_matrix = np.zeros((self.natoms, self.natoms))
-        for j in xrange(0, self.natoms):
-            for i in xrange(j+1, self.natoms):
+        for j in range(0, self.natoms):
+            for i in range(j+1, self.natoms):
                 distance_matrix[i][j] = np.linalg.norm(self.molecule[i].r - self.molecule[j].r)
                 distance_matrix[j][i] = distance_matrix[i][j]
 
@@ -411,11 +411,12 @@ class ORCAOutputParser(ORCAParser):
         from nuclear property calculations.
         """
         for atom in self.molecule:
-            self._extract_atom_nuclear(atom)
+            self._extract_atom_hyperfine(atom)
+            self._extract_atom_shifts(atom)
 
-    def _extract_atom_nuclear(self, atom):
+    def _extract_atom_hyperfine(self, atom):
         """
-        Get all of the nuclear properties for a single atom.
+        Get all of the hyperfine properties for a single atom.
         """
 
         # first, find the atom
@@ -432,7 +433,7 @@ class ORCAOutputParser(ORCAParser):
         idx_hyp += (idx_nucleus + 1)
 
         ###############
-        ### ORCA 3.0.0
+        ### ORCA 3.0.0+
         if (len(self.orcafile[idx_hyp].split()) == 1):
             # Raw HFC matrix (all values in MHz):
             # [00] ------------------------------
@@ -543,6 +544,75 @@ class ORCAOutputParser(ORCAParser):
         atom.efg._calc_nqi_tensor()
 
         return
+
+    def _extract_atom_shifts(self, atom):
+        """
+        Extract all the NMR chemical shift information for a single atom.
+        """
+
+        # first, find the section
+        searchstr = "CHEMICAL SHIFTS"
+        idx_section = self.get_string_index(searchstr)
+        if (idx_section == -1): return
+
+        # now, find the atom
+        searchstr = "Nucleus\s+{}{}".format(atom.index, atom.name)
+        idx = self.get_regex_index(searchstr, idx_section)
+        if (idx == -1): return
+        idx += idx_section
+
+        # --------------
+        # [00] Nucleus   2O :
+        # --------------
+        # Raw-matrix : 
+        # [03]        0.0001559    0.0001446    0.0000972
+        # [04]        0.0000626    0.0003228   -0.0000362
+        # [05]        0.0000767   -0.0000402    0.0003296
+
+        # Diagonalized sT*s matrix:
+        # [08] sDSO    0.0005205    0.0005961    0.0005458  iso=   0.0005541
+        # [09] sPSO   -0.0004465   -0.0002325   -0.0001751  iso=  -0.0002847
+        #        ---------------  ---------------  ---------------
+        # [11] Total   0.0000739    0.0003636    0.0003707  iso=   0.0002694
+
+        # Orientation:
+        # [14]  X     0.8882944    0.1926421    0.4169197
+        # [15]  Y    -0.3206033   -0.3899065    0.8632418
+        # [16]  Z    -0.3288564    0.9004787    0.2845901
+
+        # --------------
+        # Nucleus   3S :
+        # --------------
+        # Raw-matrix : 
+        #         0.0002778   -0.0000741   -0.0000508
+        #        -0.0000840    0.0005165    0.0000449
+        #        -0.0000388    0.0000294    0.0006807
+
+        # Diagonalized sT*s matrix:
+        # sDSO    0.0011586    0.0011695    0.0011147  iso=   0.0011476
+        # sPSO   -0.0009070   -0.0006440   -0.0004167  iso=  -0.0006559
+        #        ---------------  ---------------  ---------------
+        # Total   0.0002516    0.0005255    0.0006979  iso=   0.0004917
+
+        # Orientation:
+        #   X     0.9570388    0.2501512   -0.1466324
+        #   Y     0.2808378   -0.9255185    0.2540581
+        #   Z     0.0721581    0.2843234    0.9560091
+
+        atom.nmr.shiftmat = np.array([self.orcafile[idx+3].split(),
+                                      self.orcafile[idx+4].split(),
+                                      self.orcafile[idx+5].split()], dtype=np.float64)
+        sdso_tmp = self.orcafile[idx+8].split()[1:]
+        spso_tmp = self.orcafile[idx+9].split()[1:]
+        total_tmp = self.orcafile[idx+11].split()[1:]
+        atom.nmr.sdso, atom.nmr.sdso_iso = np.asanyarray(sdso_tmp[0:3], dtype=np.float64), float(sdso_tmp[-1])
+        atom.nmr.spso, atom.nmr.spso_iso = np.asanyarray(spso_tmp[0:3], dtype=np.float64), float(spso_tmp[-1])
+        atom.nmr.shiftpri, atom.nmr.shiftiso = np.asanyarray(total_tmp[0:3], dtype=np.float64), float(total_tmp[-1])
+        atom.nmr.shiftori = np.array([self.orcafile[idx+14].split()[1:],
+                                      self.orcafile[idx+15].split()[1:],
+                                      self.orcafile[idx+16].split()[1:]], dtype=np.float64)
+        atom.nmr._scale()
+        atom.nmr._diag()
 
     def _extract_molecule_euler(self):
         """
