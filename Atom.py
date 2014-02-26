@@ -111,7 +111,7 @@ class NMR:
         Diagonalize the raw shift matrix to get the three principal shift
         values and an isotropic result.
         """
-        self.eigvals = np.sqrt(spl.eigvalsh(np.dot(self.shiftmat.T, self.shiftmat)))
+        self.eigvals = np.sqrt(spl.eigvals(np.dot(self.shiftmat.T, self.shiftmat)).real)
         self.iso = np.sum(self.eigvals) / 3.0
 
 class Hyperfine:
@@ -134,12 +134,12 @@ class Hyperfine:
                               [nan, nan, nan],
                               [nan, nan, nan]])
 
-        def __str__(self):
-            s = "Hyperfine([{0} {1} {2}]; {3})"
-            return s.format(self.atensor[0],
-                            self.atensor[1],
-                            self.atensor[2],
-                            self.aiso)
+    def __str__(self):
+        s = "Hyperfine([{0} {1} {2}]; {3})"
+        return s.format(self.atensor[0],
+                        self.atensor[1],
+                        self.atensor[2],
+                        self.aiso)
 
 class EFG:
     """
