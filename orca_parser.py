@@ -169,6 +169,8 @@ class ORCAOutputParser(ORCAParser):
         if self._has_coords == True:
             self._calc_interatomic_distance()
             self._extract_gtensor()
+            self.indices_hyperfine = []
+            self.indices_nmr = []
             self._extract_molecule_nuclear()
             self._extract_molecule_euler()
 
@@ -426,6 +428,7 @@ class ORCAOutputParser(ORCAParser):
         searchstr = "Nucleus\s+{}{}".format(atom.index, atom.name)
         idx_nucleus = self.get_regex_index(searchstr)
         if (idx_nucleus == -1): return
+        self.indices_hyperfine.append(atom.index)
 
         # gather the hyperfine information
         searchstr = "Raw HFC matrix (all values in MHz):"
@@ -557,6 +560,7 @@ class ORCAOutputParser(ORCAParser):
         searchstr = "CHEMICAL SHIFTS"
         idx_section = self.get_string_index(searchstr)
         if (idx_section == -1): return
+        self.indices_nmr.append(atom.index)
 
         # now, find the atom
         searchstr = "Nucleus\s+{}{}".format(atom.index, atom.name)
