@@ -500,6 +500,8 @@ class ORCAOutputParser(ORCAParser):
                                             self.orcafile[idx_hyp+11].split()[1:],
                                             self.orcafile[idx_hyp+12].split()[1:]], dtype=np.float64)
 
+        atom.hyperfine._calc_eff_spin_params()
+
         searchstr = "Raw EFG matrix (all values in a.u.**-3):"
         # the EFG output comes after the hyperfine output
         idx_efg = self.get_string_index(searchstr, idx_hyp)

@@ -12,12 +12,17 @@ class CopperImidazoleAnalysis:
 
     def copper_id(self, orcafile):
         """Return the id of the copper atom. Assume there's only one."""
+        if not orcafile._has_coords: return nan
         return orcafile.find_element("Cu")[0]
+
+    def nitrogen_ids(self, orcafile):
+        """Return a list of ids of all nitrogen atoms."""
+        if not orcafile._has_coords: return nan
+        return orcafile.find_element("N")
 
     def nitrogen_close_id(self, orcafile):
         """Return the id of the nitrogen closest to the copper."""
-        if not orcafile._has_coords: return nan
-        ids_n = orcafile.find_element("N")
+        ids_n = self.nitrogen_ids(orcafile)
         if (ids_n == []): return nan
         id_cu = self.copper_id(orcafile)
         distances = [orcafile.pair_distance(id_cu, n) for n in ids_n]
@@ -26,8 +31,7 @@ class CopperImidazoleAnalysis:
 
     def nitrogen_far_id(self, orcafile):
         """Return the id of the nitrogen 2nd closest to the copper."""
-        if not orcafile._has_coords: return nan
-        ids_n = orcafile.find_element("N")
+        ids_n = self.nitrogen_ids(orcafile)
         if (ids_n == []): return nan
         id_cu = self.copper_id(orcafile)
         distances = [orcafile.pair_distance(id_cu, n) for n in ids_n]

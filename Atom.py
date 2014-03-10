@@ -134,12 +134,35 @@ class Hyperfine:
                               [nan, nan, nan],
                               [nan, nan, nan]])
 
+        self.rho = nan
+        self.tdip = nan
+
     def __str__(self):
         s = "Hyperfine([{0} {1} {2}]; {3})"
         return s.format(self.atensor[0],
                         self.atensor[1],
                         self.atensor[2],
                         self.aiso)
+
+    def _calc_eff_spin_params(self):
+        """
+        Calculate the rho and T_dip terms that appear [...]
+        """
+
+        Axx, Ayy, Azz = self.atensor[0], self.atensor[1], self.atensor[2]
+        Aiso = self.aiso
+
+        rho = (3*Aiso - 2*Axx - Azz)/(Aiso - Azz)
+        # rho = (-3*Aiso + 2*Ayy + Azz)/(Aiso - Azz)
+        # need to add an assertion that both of these are equal
+
+        # tdip = (-Aiso + Axx)/(rho - 1)
+        # tdip = (Aiso - Ayy)/(rho + 1)
+        tdip = (Azz - Aiso)/2
+        # need to add an assertion that these three are equal
+
+        self.rho = rho
+        self.tdip = tdip
 
 class EFG:
     """
@@ -173,8 +196,12 @@ class EFG:
 
     def _calc_nqi_tensor(self):
         """
+        Calculate the diagonal representation of the NQI tensor as
+        I*Q*I = e**2qQ/(4I(2I-1))*[-(1-eta),-(1+eta),2].
         """
         self.px = self.k * (-(1-self.eta))
         self.py = self.k * (-(1+self.eta))
         self.pz = self.k * 2
         self.p = np.array([self.px, self.py, self.pz])
+
+        # eta = (self.px - self.py)/self.pz

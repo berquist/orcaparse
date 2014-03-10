@@ -64,3 +64,11 @@ class GTensor:
                         self.gtensor[1],
                         self.gtensor[2],
                         self.giso)
+
+    def _diag(self):
+        """
+        Diagonalize the raw g-matrix to get the three principal g values
+        values and an isotropic result.
+        """
+        self.eigvals = np.sqrt(spl.eigvals(np.dot(self.gmatrix.T, self.gmatrix)).real)
+        self.iso = np.sum(self.eigvals) / 3.0
