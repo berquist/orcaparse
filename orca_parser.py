@@ -240,8 +240,11 @@ class ORCAOutputParser(ORCAParser):
         # print self.keywords
         # print self.blocks
 
-    def get_energy(self, string_to_search = None):
-        pass
+    def get_energy(self, string_to_search = "Total Energy"):
+        # Total Energy       :         -814.97149364 Eh          -22176.50177 eV
+        idx = self.get_string_index(string_to_search)
+        energy = float(self.orcafile[idx].split()[3])
+        return energy
 
     def _set_output_keywords(self):
         pass
