@@ -10,8 +10,8 @@ import piratechem as pc
 from piratechem.utils import one_smallest, two_smallest
 from piratechem.utils import only_numerics
 
-from Atom import Atom
-from Molecule import Molecule
+from atom import Atom
+from molecule import Molecule
 
 class ORCAParser:
     """
@@ -464,6 +464,7 @@ class ORCAOutputParser(ORCAParser):
                                                self.orcafile[idx_hyp+3].split()], dtype=np.float64)
             atom.hyperfine.afc = np.asanyarray(self.orcafile[idx_hyp+5].split()[1:], dtype=np.float64)
             atom.hyperfine.asd = np.asanyarray(self.orcafile[idx_hyp+6].split()[1:], dtype=np.float64)
+            atom.hyperfine.aso = np.asanyarray(self.orcafile[idx_hyp+8].split()[1:4], dtype=np.float64)
             atottmp = self.orcafile[idx_hyp+11].split()[1:]
             atom.hyperfine.atensor, atom.hyperfine.aiso = np.array([atottmp[0], atottmp[1], atottmp[2]], dtype=np.float64), float(atottmp[-1])
             atom.hyperfine.aori = np.array([self.orcafile[idx_hyp+13].split()[1:],
@@ -671,3 +672,15 @@ class ORCAOutputParser(ORCAParser):
         """
         pass
 
+    def extract_timings_modules(self):
+        """
+        """
+        searchstr = "Timings for individual modules:"
+        idx = self.get_string_index(searchstr)
+        if (idx == -1): return
+        idx += 2
+
+        for line in self.orcafile[idx:]:
+            print line
+
+        return
