@@ -135,6 +135,8 @@ class ORCAParser:
         Returns the index for the line containing the given string.
         (case-sensitive)
         """
+        if start_index < 0:
+            start_index = 0
         for idx, line in enumerate(self.orcafile[start_index:]):
             if (line.find(string_to_search) > -1):
                 return idx
@@ -145,6 +147,8 @@ class ORCAParser:
         Returns the index for the line matching the given regular
         expression string. (case-sensitive)
         """
+        if start_index < 0:
+            start_index = 0
         for idx, line in enumerate(self.orcafile[start_index:]):
             if (re.search(regex_to_search, line) is not None):
                 return idx
