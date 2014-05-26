@@ -29,9 +29,9 @@ def convert_basis_int(basis):
         if len(line) == 2:
             output += ' {} {}\n'.format(*line)
         if len(line) == 3:
-            output += '  {} {} {}\n'.format(*line)
+            output += '  {} {} {}\n'.format(*line).replace('D', 'E')
         if len(line) == 4:
-            output += '  {} {} {} {}\n'.format(*line)
+            output += '  {} {} {} {}\n'.format(*line).replace('D', 'E')
     output += ' end\n'
     return output
 
@@ -60,8 +60,8 @@ def convert_basis_ext(basis):
         if len(line) == 2:
             output += ' {} {}\n'.format(*line)
         if len(line) == 3:
-            output += '  {} {} {}\n'.format(*line)
+            output += '  {} {} {}\n'.format(*line).replace('D', 'E')
         if len(line) == 4:
-            output += '  {} {} {} {}\n'.format(*line)
+            output += '  {} {} {} {}\n'.format(*line).replace('D', 'E')
     output += 'STOP\n'
     return output
