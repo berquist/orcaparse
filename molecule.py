@@ -13,6 +13,10 @@ class Molecule(pc.molecule.Molecule):
         pc.molecule.Molecule.__init__(self, name)
         self.gtensor = GTensor()
 
+        self.ssq_actual = nan
+        self.ssq_ideal = nan
+        self.ssq_deviation = nan
+
     def __getitem__(self, key):
         """
         """
@@ -72,3 +76,4 @@ class GTensor:
         """
         self.eigvals = np.sqrt(spl.eigvals(np.dot(self.gmatrix.T, self.gmatrix)).real)
         self.iso = np.sum(self.eigvals) / 3.0
+
