@@ -1,8 +1,11 @@
 #!/usr/bin/env python2
 
-import orca_parser
+from __future__ import division
+
 import numpy as np
 from numpy import nan
+
+import orca_parser
 from piratechem.utils import one_smallest, two_smallest
 
 class CopperImidazoleAnalysis:
@@ -39,24 +42,60 @@ class CopperImidazoleAnalysis:
         return idx
 
     def hyperfine(self, orcafile, idx_nucleus):
-        """Return the full hyperfine tensor for the given atom id."""
-        if np.isnan(idx_nucleus): return np.array([nan, nan, nan])
+        """
+        Return the diagonalized hyperfine tensor for the given atom id.
+        """
+        if np.isnan(idx_nucleus):
+            return np.array([nan, nan, nan])
         return orcafile.return_atom_hyperfine(orcafile.molecule[idx_nucleus])[0]
 
-    def hyperfine_zz(self, orcafile, idx_nucleus):
-        """Return the A_{zz} element for the given atom id."""
-        if np.isnan(idx_nucleus): return nan
-        orcafile.get_hyperfine(orcafile.molecule[idx_nucleus])
-        return orcafile.molecule[idx_nucleus].hyperfine.amatrix[2,2]
-    
     def euler(self, orcafile, idx_nucleus):
-        """Return the alpha, beta, gamma angles between the given hyperfine
-        tensor and the g-tensor."""
-        if np.isnan(idx_nucleus): return np.array([nan, nan, nan])
+        """
+        Return the alpha, beta, and gamma angles between the given hyperfine
+        tensor and the g-tensor.
+        """
+        if np.isnan(idx_nucleus):
+            return np.array([nan, nan, nan])
         return orcafile.molecule[idx_nucleus].euler.hyperfine.return_angles()
 
     def nqi(self, orcafile, idx_nucleus):
-        """Return the nuclear quadrupolar interactions (NQI tensor, NQCC, eta)
-        for the given atom id."""
-        if np.isnan(idx_nucleus): return nan
+        """
+        Return the nuclear quadrupolar interactions (NQI tensor, NQCC, eta)
+        for the given atom id.
+        """
+        if np.isnan(idx_nucleus):
+            return nan
         return orcafile.return_atom_nqi(orcafile.molecule[idx_nucleus])
+
+    def determine_copper_covalency(self, orcafile):
+        """
+        Calculate the covalence metric \alpha^{2} from the the equation of
+        Kivelson and Nieman:
+
+        \alpha^{2} = -\frac{A_{\parallel}}{P} + (g_{\parallel} - g_{e}) +
+          \frac{3}{7}(g_{\perp} - g_{e}) + 0.04
+
+        where P is the interaction dipolar term of the free Cu(II) ion
+        (= 0.036 cm**-1 == 1079.25 MHz).
+
+        \alpha^{2} = 1.0 -> completely ionic
+        \alpha^{2} = 0.5 -> completely covalent
+
+        Reference:
+        Daniel Kivelson and Robert Neiman, Journal of Chemical Physics,
+        ESR Studies on the Bonding in Copper Complexes, 1961, 35, 149-155.
+        DOI: 10.1063/1.1731880
+        """
+
+        A_para = abs(self.hyperfine(orcafile, self.copper_id(orcafile))[2])
+        g_principal = orcafile.molecule.gtensor.gtensor
+        g_para = g_principal[2]
+        g_perp = (g_principal[0] + g_principal[1]) / 2
+        g_e = orcafile.molecule.gtensor.gel
+
+        c = 299792458
+        P = 0.036 * 100 * c * 10**-6
+
+        alpha_sq = -(A_para/P) + (g_para - g_e) + (3/7)*(g_perp - g_e) + 0.04
+
+        return alpha_sq
