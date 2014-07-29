@@ -177,6 +177,7 @@ class ORCAOutputParser(ORCAParser):
             self.indices_nmr = []
             self._extract_molecule_nuclear()
             self._extract_molecule_euler()
+            self._extract_spin_contamination()
 
     def _extract_input_file(self):
         """
@@ -667,6 +668,20 @@ class ORCAOutputParser(ORCAParser):
             self.molecule[idx_nucleus].euler.efg.efgx = tmpline[3]
             self.molecule[idx_nucleus].euler.efg.efgy = tmpline[4]
             self.molecule[idx_nucleus].euler.efg.efgz = tmpline[5]
+
+        return
+
+    def _extract_spin_contamination(self):
+        """
+        For spin-unrestricted jobs, find the ideal and actual values of <S**2>.
+        """
+        searchstr = "Expectation value of <S**2>"
+        idx = self.get_string_index(searchstr)
+        if (idx == -1): return
+
+        self.molecule.ssq_actual = float(self.orcafile[idx].split()[-1])
+        self.molecule.ssq_ideal = float(self.orcafile[idx+1].split()[-1])
+        self.molecule.ssq_deviation = float(self.orcafile[idx+2].split()[-1])
 
         return
 
