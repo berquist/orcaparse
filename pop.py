@@ -73,7 +73,8 @@ class Mulliken(Pop):
     """
     def __init__(self, job, type_string = "MULLIKEN"):
         Pop.__init__(self, job, type_string)
-        self._get_chg_atomic()
+        if self.idx_section > -1:
+            self._get_chg_atomic()
         return
 
 class Loewdin(Pop):
@@ -82,7 +83,8 @@ class Loewdin(Pop):
     """
     def __init__(self, job, type_string = "LOEWDIN"):
         Pop.__init__(self, job, type_string)
-        self._get_chg_atomic()
+        if self.idx_section > -1:
+            self._get_chg_atomic()
         return
 
 class Mayer(Pop):
@@ -91,12 +93,13 @@ class Mayer(Pop):
     """
     def __init__(self, job, type_string = "MAYER"):
         Pop.__init__(self, job, type_string)
+        if self.idx_section > -1:
 
-        self.NA = []
-        self.QA = []
-        self.VA = []
-        self.BVA = []
-        self.FA = []
+            self.NA = []
+            self.QA = []
+            self.VA = []
+            self.BVA = []
+            self.FA = []
 
         return
 
@@ -106,6 +109,8 @@ class Hirshfeld(Pop):
     """
     def __init__(self, job, type_string = "HIRSHFELD"):
         Pop.__init__(self, job, type_string)
+        if self.idx_section > -1:
+            pass
         return
 
 class ChElPG(Pop):
@@ -115,7 +120,8 @@ class ChElPG(Pop):
     def __init__(self, job, type_string = "CHELPG"):
         Pop.__init__(self, job, type_string)
         self.idx_section = self.job.get_string_index("ORCA CHELPG CHARGES GENERATION")
-        self._get_chg_atomic()
+        if self.idx_section > -1:
+            self._get_chg_atomic()
         return
 
     def _get_chg_atomic(self):
