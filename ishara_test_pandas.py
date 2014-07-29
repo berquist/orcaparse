@@ -75,31 +75,37 @@ for filename in namelist:
     kappa = sum(vals_kappa)/len(vals_kappa)
     eta = sum(vals_eta)/len(vals_eta)
 
-    print "  name:", filename
-    print "g_para:", g_para
-    print "g_perp:", g_perp
-    print "A_para:", A_para
-    print "A_perp:", A_perp
-    print "======="
-    print " atoms:", ids_nitrogen
-    print " A_iso:", vals_A_iso, A_iso
-    print " T_dip:", vals_T_dip, T_dip
-    print " kappa:", vals_kappa, kappa
-    print "   eta:", vals_eta, eta
+    spin_contam_pct = (orcafile.molecule.ssq_deviation / orcafile.molecule.ssq_ideal) * 100
+    alpha_sq = cia.determine_copper_covalency(orcafile)
+
+    print "   name:", filename
+    print " g_para:", g_para
+    print " g_perp:", g_perp
+    print " A_para:", A_para
+    print " A_perp:", A_perp
+    print "========"
+    print "  atoms:", ids_nitrogen
+    print "  A_iso:", vals_A_iso, A_iso
+    print "  T_dip:", vals_T_dip, T_dip
+    print "  kappa:", vals_kappa, kappa
+    print "    eta:", vals_eta, eta
+    print "========"
+    print " ssq_pct:", spin_contam_pct
+    print "alpha_sq:", alpha_sq
     print "\n"
 
     job_results['filename'] = os.path.abspath(filename)
     job_results['g_para'] = g_para
     job_results['g_perp'] = g_perp
-    job_results['A_para'] = A_para
-    job_results['A_perp'] = A_perp
+    job_results['A_para'] = abs(A_para)
+    job_results['A_perp'] = abs(A_perp)
     job_results['nitrogen_atoms'] = ids_nitrogen
     job_results['A_iso_vals'] = vals_A_iso
     job_results['A_iso'] = A_iso
     job_results['T_dip_vals'] = vals_T_dip
     job_results['T_dip'] = T_dip
     job_results['kappa_vals'] = vals_kappa
-    job_results['kappa'] = kappa
+    job_results['kappa'] = abs(kappa)
     job_results['eta_vals'] = vals_eta
     job_results['eta'] = eta
     job_results['count_imidazoles'] = count_imidazoles
@@ -107,6 +113,8 @@ for filename in namelist:
     job_results['origin'] = determine_origin(stub)
     # job_results['basis_copper'] = 
     # job_results['basis_full'] = 
+    job_results['spin_contam_pct'] = spin_contam_pct
+    job_results['alpha_sq'] = alpha_sq
 
     all_results[filename] = job_results
 
