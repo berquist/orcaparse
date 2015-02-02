@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from periodic_table import sym2num
+from .periodic_table import sym2num
 
 def convert_basis_int(basis):
     """

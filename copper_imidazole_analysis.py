@@ -1,11 +1,11 @@
 #!/usr/bin/env python2
 
-from __future__ import division
+
 
 import numpy as np
 from numpy import nan
 
-import orca_parser
+from . import orca_parser
 from piratechem.utils import one_smallest, two_smallest
 
 class CopperImidazoleAnalysis:

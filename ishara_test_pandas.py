@@ -4,6 +4,7 @@ i1_e = {'g_para': 2.22, 'g_perp': 2.06, 'A_para': 535, 'A_perp': 39, 'A_iso': 1.
 i2_e = {'g_para': 2.30, 'g_perp': 2.05, 'A_para': 443, 'A_perp': 42, 'A_iso': 1.75, 'T_dip': 0.12, 'kappa': 1.65, 'eta': 0.71, 'count_nitrogens': 4, 'count_imidazoles': 2, 'origin': 'expt'}
 i4_e = {'g_para': 2.26, 'g_perp': 2.06, 'A_para': 510, 'A_perp': 39, 'A_iso': 1.72, 'T_dip': 0.14, 'kappa': 2.80, 'eta': 0.67, 'count_nitrogens': 8, 'count_imidazoles': 4, 'origin': 'expt'}
 
+
 def determine_origin(stub):
     '''Based on a filename stub, return a string that identifies the origin
     of the structure.'''
@@ -12,8 +13,8 @@ def determine_origin(stub):
     else:
         return 'qm_crystal'
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     import argparse
     import os
     import pandas as pd
@@ -33,7 +34,7 @@ if __name__ == '__main__':
     for filename in namelist:
         # parse the filename for:
         # 1. number of imidazoles (always the first character)
-        # 2. where's the structure from? 
+        # 2. where's the structure from?
         #  'expt', 'qm_crystal' (as-is or constrained opt), or 'qm_opt' (full opt)
         stub = os.path.splitext(os.path.basename(filename))[0]
         count_imidazoles = int(stub[0])

@@ -1,15 +1,15 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
+
+import argparse
 
 from . import orca_parser
 from .copper_imidazole_analysis import CopperImidazoleAnalysis
-import argparse
+
 
 cia = CopperImidazoleAnalysis()
 
 parser = argparse.ArgumentParser(description="Given pathnames of ORCA output files, pretty-print the electronic g-tensor and the copper/far nitrogen hyperfine tensors.")
-
 parser.add_argument(dest="namelist", metavar="<orca filename>", nargs="+", type=str, default=None, help="ORCA input or output files.")
-
 args = parser.parse_args()
 namelist = args.namelist
 

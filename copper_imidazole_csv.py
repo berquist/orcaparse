@@ -1,17 +1,17 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
+
+import argparse
+import csv
 
 from . import orca_parser
 from .copper_imidazole_analysis import CopperImidazoleAnalysis
-import argparse
-import csv
+
 
 cia = CopperImidazoleAnalysis()
 
 parser = argparse.ArgumentParser(description="Given pathnames of ORCA output files, make a dump of certain spectroscopic parameters to a CSV file.")
-
 parser.add_argument("--csvname", dest="csvname", metavar="<CSV output root name>", type=str, default="output.csv", help="optional name for the CSV output file")
 parser.add_argument(dest="namelist", metavar="<ORCA filename>", nargs="+", type=str, default=None, help="ORCA output files")
-
 args = parser.parse_args()
 namelist = args.namelist
 

@@ -1,32 +1,37 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 
-class EPRFile:
+
+class EPRFile(object):
     """
     """
+
     def __init__(self, charge=0, xyzfile=""):
         self.contents = self.default(charge, xyzfile)
 
     def default(self, charge, xyzfile):
         pass
 
-class OptFile:
+
+class OptFile(object):
     """
     """
+
     def __init__(self, charge=0, xyzfile=""):
         self.contents = self.default(charge, xyzfile)
 
     def default(self, charge, xyzfile):
         pass
 
-class EPROptFile:
+
+class EPROptFile(object):
     """
     """
+
     def __init__(self, charge=0, xyzfile=""):
         self.contents = self.default(charge, xyzfile)
 
     def default(self, charge, xyzfile):
-        """
-        Generate the ORCA input file, here for a geometry optimization,
+        """Generate the ORCA input file, here for a geometry optimization,
         followed by an EPR calculation (g-tensor and N/Cu hyperfine)
         """
         return """! uks def2-tzvpp def2-tzvpp/j ri rijcosx somf(1x) tightscf tightopt grid5
@@ -63,15 +68,17 @@ class EPROptFile:
 
 """.format(charge, xyzfile)
 
-class PBSFile:
+
+class PBSFile(object):
     """
     """
+
     def __init__(self, xyzfile=""):
         self.contents = self.default(xyzfile)
 
     def default(self, xyzfile):
-        """
-        Returns the default PBS/Torque job submission script for running ORCA jobs.
+        """Returns the default PBS/Torque job submission script for running
+        ORCA jobs.
         """
         if xyzfile == "":
             xyzfilecp = ""
@@ -106,6 +113,7 @@ trap run_on_exit EXIT
 
 `which orca` {0}.inp >& $PBS_O_WORKDIR/{0}.out
 """.format(jobname, xyzfilecp)
+
 
 if __name__ == "__main__":
     import argparse

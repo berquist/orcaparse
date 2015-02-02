@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+from __future__ import print_function
 
 import numpy as np
 from numpy import nan
@@ -13,7 +13,8 @@ from piratechem.utils import only_numerics
 from .atom import Atom
 from .molecule import Molecule
 
-class ORCAParser:
+
+class ORCAParser(object):
     """
     A parser for ORCA input and output files.
 
@@ -25,6 +26,7 @@ class ORCAParser:
     >>> molecule.scf['guess'] = 'pmodel'
     >>> molecule.inputblock += 'blyp def2-svp def2-svp/c'
     """
+
     def __init__(self, file_name):
         self.file_name = file_name
         self.orcafile = []
@@ -43,18 +45,16 @@ class ORCAParser:
         pass
 
     def load(self):
-        """
-        Load the entire file into the object,
-        without doing any processing on it.
+        """Load the entire file into the object, without doing any processing
+        on it.
         """
         handle = open(self.file_name, "r+b")
         self.orcafile = handle.readlines()
         handle.close()
 
     def load_map(self):
-        """
-        Load the entire file as a memory-mapped object,
-        without doing any processing on it.
+        """Load the entire file as a memory-mapped object, without doing any
+        processing on it.
         """
         handle = open(self.file_name, "r+b")
         self.orcamap = mmap.mmap(handle.fileno(), 0)
@@ -102,8 +102,7 @@ class ORCAParser:
         self.distance_matrix = distance_matrix
 
     def find_element(self, element_name):
-        """
-        Return a list of indices corresponding to all instances of an
+        """Return a list of indices corresponding to all instances of an
         element in the molecule.
         """
         result_list = []
@@ -113,8 +112,7 @@ class ORCAParser:
         return result_list
 
     def pair_distance(self, atomidx1, atomidx2):
-        """
-        Return the distance between the two atoms with the given indices.
+        """Return the distance between the two atoms with the given indices.
         """
         return self.distance_matrix[atomidx1][atomidx2]
 
@@ -122,8 +120,7 @@ class ORCAParser:
         pass
 
     def interatomic_distance(self, atoms_index):
-        """
-        returns the pairwise distance array between two atoms in file
+        """Returns the pairwise distance array between two atoms in file.
 
         :param atoms_index: contains index of positions of atoms of interest, 0 is first atom
         :type atoms_index: list
@@ -131,8 +128,7 @@ class ORCAParser:
         pass
 
     def get_string_index(self, string_to_search, start_index=0):
-        """
-        Returns the index for the line containing the given string.
+        """Returns the index for the line containing the given string.
         (case-sensitive, first match only)
         """
         if start_index < 0:
@@ -143,8 +139,7 @@ class ORCAParser:
         return -1
 
     def get_string_indices(self, string_to_search, start_index):
-        """
-        Returns a list of indices for the lines containing the given
+        """Returns a list of indices for the lines containing the given
         string. (case-sensitive, all matches)
         """
         if start_index < 0:
@@ -156,8 +151,7 @@ class ORCAParser:
         return idxs
 
     def get_regex_index(self, regex_to_search, start_index=0):
-        """
-        Returns the index for the line matching the given regular
+        """Returns the index for the line matching the given regular
         expression string. (case-sensitive, first match only)
         """
         if start_index < 0:
@@ -168,9 +162,8 @@ class ORCAParser:
         return -1
 
     def get_regex_indices(self, regex_to_search, start_index=0):
-        """
-        Returns a list of indices for the lines matching the given
-        regular expression string. (case-sensitive, all matches)
+        """Returns a list of indices for the lines matching the given regular
+        expression string. (case-sensitive, all matches)
         """
         if start_index < 0:
             start_index = 0
@@ -180,17 +173,19 @@ class ORCAParser:
                 idxs.append(idx)
         return idxs
 
+
 class ORCAInputParser(ORCAParser):
+    """A parser for ORCA input files.
     """
-    A parser for ORCA input files.
-    """
+
     def __init__(self, file_name):
         ORCAParser.__init__(self, file_name)
 
+
 class ORCAOutputParser(ORCAParser):
+    """A parser for ORCA output files.
     """
-    A parser for ORCA output files.
-    """
+
     def __init__(self, file_name):
         ORCAParser.__init__(self, file_name)
         self.load()
@@ -206,8 +201,7 @@ class ORCAOutputParser(ORCAParser):
             self._extract_spin_contamination()
 
     def _extract_input_file(self):
-        """
-        Extract the original input file from the output file.
+        """Extract the original input file from the output file.
         """
         searchstr = "INPUT FILE"
         idxstart = self.get_string_index(searchstr)
@@ -319,15 +313,13 @@ class ORCAOutputParser(ORCAParser):
         self.natoms = len(self.molecule)
 
     def return_gtensor(self):
-        """
-        Return the electronic g-tensor and isotropic g-value of the molecule
-        from the output file.
+        """Return the electronic g-tensor and isotropic g-value of the
+        molecule from the output file.
         """
         return self.molecule.gtensor.gtensor, self.molecule.gtensor.giso
 
     def _extract_gtensor(self):
-        """
-        Extract the electronic g-tensor from the output file.
+        """Extract the electronic g-tensor from the output file.
         """
         idxs = []
         searchstr = "ELECTRONIC G-MATRIX"
@@ -427,33 +419,29 @@ class ORCAOutputParser(ORCAParser):
                                                        self.orcafile[idx+18].split()[1:]], dtype=np.float64)
 
     def return_atom_hyperfine(self, atom):
-        """
-        Return the hyperfine tensor and isotropic hyperfine value for the given atom.
+        """Return the hyperfine tensor and isotropic hyperfine value for the
+        given atom.
         """
         return atom.hyperfine.atensor, atom.hyperfine.aiso
 
     def return_atom_nqi(self, atom):
-        """
-        Return the nuclear quadrupolar interaction (NQI) tensor,
-        the NQ coupling constant, and the asymmetry parameter eta
-        for the given atom.
+        """Return the nuclear quadrupolar interaction (NQI) tensor, the NQ
+        coupling constant, and the asymmetry parameter eta for the
+        given atom.
         """
         return atom.efg.p, atom.efg.nqcc, atom.efg.eta
 
     def _extract_molecule_nuclear(self):
-        """
-        Get all of the fields that may be present in the output file
-        from nuclear property calculations.
+        """Get all of the fields that may be present in the output file from
+        nuclear property calculations.
         """
         for atom in self.molecule:
             self._extract_atom_hyperfine(atom)
             self._extract_atom_shifts(atom)
 
     def _extract_atom_hyperfine(self, atom):
+        """Get all of the hyperfine properties for a single atom.
         """
-        Get all of the hyperfine properties for a single atom.
-        """
-
         # first, find the atom
         searchstr = "Nucleus\s+{}{}".format(atom.index, atom.name)
         idxs_nucleus = self.get_regex_indices(searchstr)
@@ -653,8 +641,7 @@ class ORCAOutputParser(ORCAParser):
         atom.nmr._diag()
 
     def _extract_molecule_euler(self):
-        """
-        Extract all of the Euler rotation angles from the output file.
+        """Extract all of the Euler rotation angles from the output file.
         """
         endline = "-------------------------------------------------------------------"
 
@@ -695,8 +682,8 @@ class ORCAOutputParser(ORCAParser):
         return
 
     def _extract_spin_contamination(self):
-        """
-        For spin-unrestricted jobs, find the ideal and actual values of <S**2>.
+        """For spin-unrestricted jobs, find the ideal and actual values of
+        <S**2>.
         """
         searchstr = "Expectation value of <S**2>"
         idx = self.get_string_index(searchstr)
@@ -709,14 +696,11 @@ class ORCAOutputParser(ORCAParser):
         return
 
     def extract_multiple_jobs(self):
-        """
-
-        """
+        """"""
         pass
 
     def extract_timings_modules(self):
-        """
-        """
+        """"""
         searchstr = "Timings for individual modules:"
         idx = self.get_string_index(searchstr)
         if (idx == -1): return
