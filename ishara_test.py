@@ -2,8 +2,8 @@
 
 import argparse
 
-import orca_parser
-from copper_imidazole_analysis import CopperImidazoleAnalysis
+from . import orca_parser
+from .copper_imidazole_analysis import CopperImidazoleAnalysis
 
 cia = CopperImidazoleAnalysis()
 
@@ -55,15 +55,15 @@ for filename in namelist:
     kappa = sum(vals_kappa)/len(vals_kappa)
     eta = sum(vals_eta)/len(vals_eta)
 
-    print "  name:", filename
-    print "g_para:", g_para
-    print "g_perp:", g_perp
-    print "A_para:", A_para
-    print "A_perp:", A_perp
-    print "======="
-    print " atoms:", ids_nitrogen
-    print " A_iso:", vals_A_iso, A_iso
-    print " T_dip:", vals_T_dip, T_dip
-    print " kappa:", vals_kappa, kappa
-    print "   eta:", vals_eta, eta
-    print "\n"
+    print("  name:", filename)
+    print("g_para:", g_para)
+    print("g_perp:", g_perp)
+    print("A_para:", A_para)
+    print("A_perp:", A_perp)
+    print("=======")
+    print(" atoms:", ids_nitrogen)
+    print(" A_iso:", vals_A_iso, A_iso)
+    print(" T_dip:", vals_T_dip, T_dip)
+    print(" kappa:", vals_kappa, kappa)
+    print("   eta:", vals_eta, eta)
+    print("\n")

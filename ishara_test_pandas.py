@@ -84,21 +84,21 @@ if __name__ == '__main__':
         spin_contam_pct = (orcafile.molecule.ssq_deviation / orcafile.molecule.ssq_ideal) * 100
         alpha_sq = cia.determine_copper_covalency(orcafile)
 
-        print "   name:", filename
-        print " g_para:", g_para
-        print " g_perp:", g_perp
-        print " A_para:", A_para
-        print " A_perp:", A_perp
-        print "========"
-        print "  atoms:", ids_nitrogen
-        print "  A_iso:", vals_A_iso, A_iso
-        print "  T_dip:", vals_T_dip, T_dip
-        print "  kappa:", vals_kappa, kappa
-        print "    eta:", vals_eta, eta
-        print "========"
-        print " ssq_pct:", spin_contam_pct
-        print "alpha_sq:", alpha_sq
-        print "\n"
+        print("   name:", filename)
+        print(" g_para:", g_para)
+        print(" g_perp:", g_perp)
+        print(" A_para:", A_para)
+        print(" A_perp:", A_perp)
+        print("========")
+        print("  atoms:", ids_nitrogen)
+        print("  A_iso:", vals_A_iso, A_iso)
+        print("  T_dip:", vals_T_dip, T_dip)
+        print("  kappa:", vals_kappa, kappa)
+        print("    eta:", vals_eta, eta)
+        print("========")
+        print(" ssq_pct:", spin_contam_pct)
+        print("alpha_sq:", alpha_sq)
+        print("\n")
 
         job_results['filename'] = os.path.abspath(filename)
         job_results['g_para'] = g_para

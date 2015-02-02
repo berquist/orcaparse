@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 
-import orca_parser
-from copper_imidazole_analysis import CopperImidazoleAnalysis
+from . import orca_parser
+from .copper_imidazole_analysis import CopperImidazoleAnalysis
 import argparse
 import csv
 

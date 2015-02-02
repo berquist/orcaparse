@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 
+"""analysis_larsen.py: ..."""
+
 import numpy as np
-import orca_parser
-from copper_imidazole_analysis import CopperImidazoleAnalysis
+from . import orca_parser
+from .copper_imidazole_analysis import CopperImidazoleAnalysis
 import argparse
 
 cia = CopperImidazoleAnalysis()
@@ -36,18 +38,18 @@ for filename in namelist:
     A_D_y = A_y - A_iso
     A_D_z = A_z - A_iso
 
-    print "   name:", filename
-    print " g_para:", g_para
-    print " A_para:", A_para
-    print "   A_FC:", A_FC
-    print "  A_D_x:", A_D_x
-    print "  A_D_y:", A_D_y
-    print "  A_D_z:", A_D_z
-    print "A_SOC_x:", A_SOC_x
-    print "A_SOC_y:", A_SOC_y
-    print "A_SOC_z:", A_SOC_z
-    print "    A_x:", A_x
-    print "    A_y:", A_y
-    print "    A_z:", A_z
-    print "  A_iso:", A_iso
-    print "\n"
+    print("   name:", filename)
+    print(" g_para:", g_para)
+    print(" A_para:", A_para)
+    print("   A_FC:", A_FC)
+    print("  A_D_x:", A_D_x)
+    print("  A_D_y:", A_D_y)
+    print("  A_D_z:", A_D_z)
+    print("A_SOC_x:", A_SOC_x)
+    print("A_SOC_y:", A_SOC_y)
+    print("A_SOC_z:", A_SOC_z)
+    print("    A_x:", A_x)
+    print("    A_y:", A_y)
+    print("    A_z:", A_z)
+    print("  A_iso:", A_iso)
+    print("\n")

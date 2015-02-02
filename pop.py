@@ -1,13 +1,14 @@
-#!/usr/bin/env python2
+"""pop.py: Hold all population analysis and density tools."""
 
 import numpy as np
 
+
 class Pop(object):
+    """Hold all of the information associated with different types of
+    population analyses.
     """
-    Hold all of the information associated with different types of population
-    analyses.
-    """
-    def __init__(self, job, type_string = ""):
+
+    def __init__(self, job, type_string=""):
         self.job = job
         self.type_string = type_string
         self.charges = []
@@ -67,57 +68,60 @@ class Pop(object):
         header = self.type_string + section_string
         return
 
+
 class Mulliken(Pop):
+    """Hold results from a Mulliken population analysis.
     """
-    Hold results from a Mulliken population analysis.
-    """
-    def __init__(self, job, type_string = "MULLIKEN"):
+
+    def __init__(self, job, type_string="MULLIKEN"):
         Pop.__init__(self, job, type_string)
         if self.idx_section > -1:
             self._get_chg_atomic()
         return
+
 
 class Loewdin(Pop):
+    """Hold results from a Loewdin population analysis.
     """
-    Hold results from a Loewdin population analysis.
-    """
-    def __init__(self, job, type_string = "LOEWDIN"):
+
+    def __init__(self, job, type_string="LOEWDIN"):
         Pop.__init__(self, job, type_string)
         if self.idx_section > -1:
             self._get_chg_atomic()
         return
 
+
 class Mayer(Pop):
+    """Hold results from a Mayer population analysis.
     """
-    Hold results from a Mayer population analysis.
-    """
-    def __init__(self, job, type_string = "MAYER"):
+
+    def __init__(self, job, type_string="MAYER"):
         Pop.__init__(self, job, type_string)
         if self.idx_section > -1:
-
             self.NA = []
             self.QA = []
             self.VA = []
             self.BVA = []
             self.FA = []
-
         return
 
+
 class Hirshfeld(Pop):
+    """Hold results from a Hirshfeld population analysis.
     """
-    Hold results from a Hirshfeld population analysis.
-    """
-    def __init__(self, job, type_string = "HIRSHFELD"):
+
+    def __init__(self, job, type_string="HIRSHFELD"):
         Pop.__init__(self, job, type_string)
         if self.idx_section > -1:
             pass
         return
 
+
 class ChElPG(Pop):
+    """Hold results from a ChElPG (atomic) charge analysis.
     """
-    Hold results from a ChElPG (atomic) charge analysis.
-    """
-    def __init__(self, job, type_string = "CHELPG"):
+
+    def __init__(self, job, type_string="CHELPG"):
         Pop.__init__(self, job, type_string)
         self.idx_section = self.job.get_string_index("ORCA CHELPG CHARGES GENERATION")
         if self.idx_section > -1:
@@ -133,10 +137,12 @@ class ChElPG(Pop):
             self.charges.append(float(line.split()[-1]))
         return
 
-class Density:
+
+class Density(object):
+    """Parse and hold density matrix-related information all in one
+    place.
     """
-    Parse and hold density matrix-related information all in one place.
-    """
+
     def __init__(self, job):
         self._parse_basis_info(job)
         self._parse_density(job)
@@ -168,9 +174,8 @@ class Density:
         return
 
     def _parse_density(self, job):
-        """
-        From an ORCA output file with "%output print[p_density] 1 end", gather
-        and store the alpha and beta spin densities.
+        """From an ORCA output file with "%output print[p_density] 1 end",
+        gather and store the alpha and beta spin densities.
         """
         searchstr = "DENSITY\n"
         idxstart = job.get_string_index(searchstr) + 3
@@ -212,8 +217,7 @@ class Density:
         return
 
     def _calc_derived_densities(self):
-        """
-        Assuming that the alpha and beta spin densities have been gathered
+        """Assuming that the alpha and beta spin densities have been gathered
         and stored, calculate the total density and the spin density.
         """
         self.density = self.density_alpha + self.density_beta

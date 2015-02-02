@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 
-import orca_parser
-from copper_imidazole_analysis import CopperImidazoleAnalysis
+from . import orca_parser
+from .copper_imidazole_analysis import CopperImidazoleAnalysis
 import argparse
 
 cia = CopperImidazoleAnalysis()
@@ -14,7 +14,7 @@ args = parser.parse_args()
 namelist = args.namelist
 
 s = "{:>34s} {:>31s} {:>3s} {:>28s} {:>3s} {:<s}"
-print s.format("g-tensor", "a_copper", "id", "a_nitrogen_far", "id", "name")
+print(s.format("g-tensor", "a_copper", "id", "a_nitrogen_far", "id", "name"))
 
 for name in namelist:
     orcafile = orca_parser.ORCAOutputParser(name)
@@ -25,4 +25,4 @@ for name in namelist:
     atensor_far = cia.hyperfine(orcafile, id_far)
 
     s = "{:>34s} {:>28s} {:>3d} {:>25s} {:>3d} {:<s}"
-    print s.format(gtensor, atensor_cu, id_cu, atensor_far, id_far, name)
+    print(s.format(gtensor, atensor_cu, id_cu, atensor_far, id_far, name))

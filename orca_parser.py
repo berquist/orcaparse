@@ -10,8 +10,8 @@ import piratechem as pc
 from piratechem.utils import one_smallest, two_smallest
 from piratechem.utils import only_numerics
 
-from atom import Atom
-from molecule import Molecule
+from .atom import Atom
+from .molecule import Molecule
 
 class ORCAParser:
     """
@@ -723,6 +723,6 @@ class ORCAOutputParser(ORCAParser):
         idx += 2
 
         for line in self.orcafile[idx:]:
-            print line
+            print(line)
 
         return

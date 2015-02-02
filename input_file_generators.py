@@ -130,8 +130,8 @@ if __name__ == "__main__":
         orcainstance = EPROptFile(charge, stub)
         jobinstance  = PBSFile(stub)
 
-        print >> orcafile, orcainstance.default(charge, stub)
-        print >> jobfile,  jobinstance.default(stub)
+        print(orcainstance.default(charge, stub), file=orcafile)
+        print(jobinstance.default(stub), file=jobfile)
 
         orcafile.close()
         jobfile.close()
