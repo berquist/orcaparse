@@ -1,12 +1,14 @@
-#!/usr/bin/env python
+from scripts.periodic_table import Name as s2n
+from scripts.periodic_table import AtomicNum
+from scripts.gamess_basis_rename import invert_dict
 
-from .periodic_table import sym2num
 
 def convert_basis_int(basis):
     """
     Return the given basis (in GAMESS-US format from the EMSL database)
     in the ORCA format suitable for adding to an input file.
     """
+    n2s = invert_dict(s2n)
     output = ''
     # break up the file
     tmp = [line.split() for line in basis.splitlines()]
@@ -25,7 +27,8 @@ def convert_basis_int(basis):
         if len(line) == 1:
             if index > 0:
                 output += ' end\n'
-            output += '{} {}\n'.format('newgto', sym2num[line[0]])
+            # Need to convert 'CARBON' -> 6, etc.
+            output += '{} {}\n'.format('newgto', AtomicNum[n2s[line[0].lower()]])
         if len(line) == 2:
             output += ' {} {}\n'.format(*line)
         if len(line) == 3:
