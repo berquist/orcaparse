@@ -38,6 +38,7 @@ def convert_basis_int(basis):
     output += ' end\n'
     return output
 
+
 def convert_basis_ext(basis):
     """
     Return the given basis (in GAMESS-US format from the EMSL database)

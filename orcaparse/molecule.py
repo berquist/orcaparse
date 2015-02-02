@@ -36,7 +36,7 @@ class Molecule(pc.molecule.Molecule):
         self.atoms.append(atom)
 
 
-class GTensor:
+class GTensor(object):
     """Hold all of the fields that may be present in the output file from
     an electronic g-tensor calculation.
     """

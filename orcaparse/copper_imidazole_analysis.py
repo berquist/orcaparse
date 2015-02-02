@@ -1,14 +1,10 @@
-#!/usr/bin/env python2
-
-
-
 import numpy as np
 from numpy import nan
 
 from . import orca_parser
-from piratechem.utils import one_smallest, two_smallest
+from .utils import one_smallest, two_smallest
 
-class CopperImidazoleAnalysis:
+class CopperImidazoleAnalysis(object):
     def g_to_mhz(self, gauss):
         """1 Gauss = 2.8025 MHz"""
         return gauss * 2.8025

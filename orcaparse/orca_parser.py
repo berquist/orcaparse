@@ -7,9 +7,7 @@ import re
 import os
 
 import piratechem as pc
-from piratechem.utils import one_smallest, two_smallest
-from piratechem.utils import only_numerics
-
+from .utils import one_smallest, two_smallest, only_numerics
 from .atom import Atom
 from .molecule import Molecule
 
@@ -48,9 +46,8 @@ class ORCAParser(object):
         """Load the entire file into the object, without doing any processing
         on it.
         """
-        handle = open(self.file_name, "r+b")
-        self.orcafile = handle.readlines()
-        handle.close()
+        with open(self.file_name) as handle:
+            self.orcafile = handle.readlines()
 
     def load_map(self):
         """Load the entire file as a memory-mapped object, without doing any
