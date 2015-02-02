@@ -1,15 +1,19 @@
-#!/usr/bin/env python2
+"""atom.py: ...
+"""
 
-import piratechem as pc
 import numpy as np
 from numpy import nan
 import scipy.linalg as spl
+import sympy.physics.units as u
+
+import piratechem as pc
+
 
 class Atom(pc.atom.Atom):
+    """Allow each atom to contain more specific quantum chemical
+    properties than piratechem can currently handle.
     """
-    Allow each atom to contain more specific quantum chemical properties
-    than piratechem can currently handle.
-    """
+
     def __init__(self, index, name, r):
         pc.atom.Atom.__init__(self, name, r)
 
@@ -24,15 +28,20 @@ class Atom(pc.atom.Atom):
         s = "Atom(%d, %s, [%6.3f, %6.3f, %6.3f])"
         return s % (self.index, self.name, self.posx, self.posy, self.posz)
 
-class Euler:
+
+class Euler(object):
+    """Store all possible Euler angle information for a single atom.
     """
-    Store all possible Euler angle information for a single atom.
-    """
+
     def __init__(self):
         self.hyperfine = self.Hyperfine()
         self.efg = self.EFG()
 
+
     class Hyperfine:
+        """Store the Euler angle information for the atom's hyperfine tensor.
+        """
+
         def __init__(self):
             self.alpha = self.beta = self.gamma = nan
             self.ax = self.ay = self.az = nan
@@ -43,12 +52,16 @@ class Euler:
                             self.ax, self.ay, self.az)
 
         def return_angles(self):
-            """
-            Return the three angles as a NumPy row vector.
+            """Return the three Euler angles as a NumPy row vector.
             """
             return np.array([self.alpha, self.beta, self.gamma])
 
+
     class EFG:
+        """Store the Euler angle information for the atom's electric field
+        gradient (EFG) tensor.
+        """
+
         def __init__(self):
             self.alpha = self.beta = self.gamma = nan
             self.efgx = self.efgy = self.efgz = nan
@@ -59,16 +72,16 @@ class Euler:
                             self.efgx, self.efgy, self.efgz)
 
         def return_angles(self):
-            """
-            Return the three angles as a NumPy row vector.
+            """Return the three Euler angles as a NumPy row vector.
             """
             return np.array([self.alpha, self.beta, self.gamma])
 
+
 class NMR:
+    """Hold all of the fields that may be present in the output file from
+    an NMR shift calculation.
     """
-    Hold all of the fields that may be present in the output file
-    from an NMR shift calculation.
-    """
+
     def __init__(self):
         self.shiftmat = np.array([[nan, nan, nan],
                                   [nan, nan, nan],
@@ -94,8 +107,8 @@ class NMR:
                         self.shiftiso)
 
     def _scale(self):
-        """
-        Convert the absolute values given by ORCA to ppm.
+        """Convert the absolute values given by ORCA to ppm (mutate in
+        place).
         """
         abs_to_ppm = 1e6
         self.shiftmat *= abs_to_ppm
@@ -107,18 +120,19 @@ class NMR:
         self.shiftiso *= abs_to_ppm
 
     def _diag(self):
+        """Diagonalize the raw shift matrix to get the three principal shift
+        values, and use them to calculate an isotropic result.
         """
-        Diagonalize the raw shift matrix to get the three principal shift
-        values and an isotropic result.
-        """
-        self.eigvals = np.sqrt(spl.eigvals(np.dot(self.shiftmat.T, self.shiftmat)).real)
+        self.eigvals = np.sqrt(spl.eigvals(
+            np.dot(self.shiftmat.T, self.shiftmat)).real)
         self.iso = np.sum(self.eigvals) / 3.0
 
+
 class Hyperfine:
+    """Hold all of the fields that may be present in the output file from
+    an electron-nuclear hyperfine interaction calculation.
     """
-    Hold all of the fields that may be present in the output file
-    from nuclear property calculations.
-    """
+
     def __init__(self):
         self.aiso = nan
         self.atensor = np.array([nan, nan, nan])
@@ -145,8 +159,7 @@ class Hyperfine:
                         self.aiso)
 
     def _calc_eff_spin_params(self):
-        """
-        Calculate the rho and T_dip terms that appear [...]
+        """Calculate the rho and T_dip terms that appear [...]
         """
 
         Axx, Ayy, Azz = self.atensor[0], self.atensor[1], self.atensor[2]
@@ -164,9 +177,12 @@ class Hyperfine:
         self.rho = rho
         self.tdip = tdip
 
+
 class EFG:
+    """Hold all of the fields that may be present in the output file from
+    an electric field gradient calculation.
     """
-    """
+
     def __init__(self):
         self.vmatrix = np.array([[nan, nan, nan],
                                  [nan, nan, nan],
@@ -195,8 +211,7 @@ class EFG:
                         self.nqcc)
 
     def _calc_nqi_tensor(self):
-        """
-        Calculate the diagonal representation of the NQI tensor as
+        """Calculate the diagonal representation of the NQI tensor as
         I*Q*I = e**2qQ/(4I(2I-1))*[-(1-eta),-(1+eta),2].
         """
         self.px = self.k * (-(1-self.eta))
@@ -205,3 +220,18 @@ class EFG:
         self.p = np.array([self.px, self.py, self.pz])
 
         # eta = (self.px - self.py)/self.pz
+
+    def _diag(self):
+        """...
+        """
+
+        eigvals = spl.eigvalsh(self.vmaxtrix)
+        # needs an assertion against self.vtot
+        V_xx, V_yy, V_zz = sorted(eigvals, key = lambda x: abs(x))
+
+        # needs an assertion against self.eta
+        eta = (V_xx - V_yy) / V_zz
+
+        e = float(u.eV / u.J)
+        planck = float(u.planck / (u.J * u.s))
+        barn = 10e-28
