@@ -1,6 +1,6 @@
 from scripts.periodic_table import Name as s2n
 from scripts.periodic_table import AtomicNum
-from scripts.gamess_basis_rename import invert_dict
+from scripts.gamess_basis_rename import invert_dict_lowercase_vals
 
 
 def convert_basis_int(basis):
@@ -8,7 +8,7 @@ def convert_basis_int(basis):
     Return the given basis (in GAMESS-US format from the EMSL database)
     in the ORCA format suitable for adding to an input file.
     """
-    n2s = invert_dict(s2n)
+    n2s = invert_dict_lowercase_vals(s2n)
     output = ''
     # break up the file
     tmp = [line.split() for line in basis.splitlines()]
